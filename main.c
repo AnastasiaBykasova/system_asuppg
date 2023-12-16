@@ -4,18 +4,24 @@
 #include "my_lib.h"
 #include <gtk/gtk.h>
 
+
 static GtkWidget *personnel_radio_button;
 static GtkWidget *orders_radio_button;
 static GtkWidget *warehouse_radio_button;
+static GtkWidget *grid; // Объявляем grid как глобальную переменную, чтобы иметь к ней доступ из разных функций
 // Глобальные переменные для элементов окна выбора подсистемы
 GtkWidget *entry_username;
 GtkWidget *entry_password;
 GtkWidget *auth_button;
+GtkWidget *v_box = NULL;
+// GtkWidget *window;
 
-void proccess(int employee);
+int proccess(int employee);
 int check_data(char* user_name, char* password);
 int switch_system_admin();
 void print_error();
+void the_end(void);
+
 void warehouse_proccess(char* filename, int action, Warehouse* warehouse);
 void staff_proccess(char* filename, int action, StaffHeadquarters* staff_headquarters);
 void product_proccess(char* filename, int action, Order* order);
@@ -27,24 +33,27 @@ static void on_warehouse_button_clicked(GtkWidget *widget, gpointer data);
 
 // static void choose_subsystem_window(GtkApplication *app, gpointer user_data, int employee);
 static void choose_subsystem_window(GtkApplication *app, gpointer user_data);
-static void on_subsystem_button_clicked(GtkWidget *widget, gpointer window);
+static void on_subsystem_button_clicked(GtkWidget *widget, gpointer user_data);
 
 // Объявляем структуру, которая будет хранить данные
+// В структуре AppData добавьте указатель на grid
 typedef struct {
     GtkApplication *app;
     GtkWidget *window;
+    GtkWidget *main_window;
     GtkWidget *entry_username;
     GtkWidget *entry_password;
-    GtkWidget *stack;  // добавляем указатель на GtkStack в структуру AppData
+    GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
 } AppData;
 
 
 int main(int argc, char **argv) {
+
     GtkApplication *app;
     int status;
-        
+
     app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect(app, "activate", G_CALLBACK(choose_subsystem_window), NULL);
+    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
     status = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
 
@@ -54,22 +63,40 @@ int main(int argc, char **argv) {
 // Обработчик события нажатия кнопки "Войти"
 static void on_auth_button_clicked(GtkWidget *widget, gpointer user_data) {
     AppData *data = (AppData*)user_data;
-    const gchar *username = gtk_entry_get_text(GTK_ENTRY(data->entry_username));
-    const gchar *password = gtk_entry_get_text(GTK_ENTRY(data->entry_password));
+    
+    if (GTK_IS_ENTRY(data->entry_username) && GTK_IS_ENTRY(data->entry_password)) {
+        const gchar *username = gtk_entry_get_text(GTK_ENTRY(data->entry_username));
+        const gchar *password = gtk_entry_get_text(GTK_ENTRY(data->entry_password));
 
-    int employee = check_data((char*)username, (char*)password);
+        int employee = check_data((char*)username, (char*)password);
 
+        if (employee != 0) {
+            g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
+            GtkApplication *app;
+            app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+            g_signal_connect(app, "activate", G_CALLBACK(choose_subsystem_window), NULL);
+            g_application_run(G_APPLICATION(app), 0, 0);
+            g_object_unref(app);
+        } 
+    }
     g_slice_free(AppData, data); // Освобождаем память
 }
 
 static void on_subsystem_button_clicked(GtkWidget *widget, gpointer window) {
+    // AppData *data = (AppData*)user_data;
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(personnel_radio_button))) {
         g_print("Выбран вариант: Персонал\n");
+        // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
     } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(orders_radio_button))) {
         g_print("Выбран вариант: Заказы\n");
+        // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
     } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(warehouse_radio_button))) {
         g_print("Выбран вариант: Склад\n");
+        // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
     }
+    // g_object_unref(app);
+    // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
+    // g_slice_free(AppData, data); // Освобождаем память
 }
 
 
@@ -86,7 +113,7 @@ static void on_warehouse_button_clicked(GtkWidget *widget, gpointer data) {
 // Функция для создания графического интерфейса и добавления элементов
 static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window;
-    GtkWidget *grid;
+    // GtkWidget *grid;
     GtkWidget *subsystem_label; // Добавляем для отображения подсистемы
     GtkWidget *button;
 
@@ -118,14 +145,24 @@ static void activate(GtkApplication *app, gpointer user_data) {
     data->app = app;
     data->entry_username = entry_username;
     data->entry_password = entry_password;
+    data->grid = grid;  // Сохраняем grid в структуре AppData
+    data->main_window = window;  // Сохраняем указатель на главное окно в структуре AppData
+
+    // Запоминаем grid
+    grid = grid;
 
     button = gtk_button_new_with_label("Войти");
     g_signal_connect(button, "clicked", G_CALLBACK(on_auth_button_clicked), data);
     gtk_grid_attach(GTK_GRID(grid), button, 0, 2, 1, 1);
+    // gtk_box_pack_start(GTK_BOX(v_box), button, FALSE, FALSE, 0);
+   
+    // Удаляем виджет auth_button из grid
+    // gtk_container_remove(GTK_CONTAINER(grid), auth_button);
 
-    // Нам больше не нужно добавлять обработчик "on_subsystem_button_clicked" к этой кнопке
 
     gtk_widget_show_all(window);
+    // g_signal_connect(window, "destroy", G_CALLBACK(choose_subsystem_window), NULL);
+    // gtk_main();
 
 }
 
@@ -166,11 +203,14 @@ static void choose_subsystem_window(GtkApplication *app, gpointer user_data) {
 }
 
 
-void proccess(int employee) {
+int proccess(int employee) {
     // int employee = check_data(user_name, password);
     int subsystem;
+    int for_exit = 0;
+    for_exit = atexit(the_end);
+    int res = 0;
     
-    if (employee != 0) {
+    if (employee != 0 && !for_exit) {
         if (employee == 1) {
             subsystem = switch_system_admin();
         }
@@ -193,15 +233,18 @@ void proccess(int employee) {
             if (subsystem == 1) {
                 strcpy(filename, "files/staff.txt");
                 staff_proccess(filename, action, &staff_headquarters);
+                res = 1;
 
             }
             else if (subsystem == 2) {
                 strcpy(filename, "files/orders.txt");
                 product_proccess(filename, action, &order);
+                res = 1;
             }
             else if (subsystem == 3) {
                 strcpy(filename, "files/warehouse.txt");
                 warehouse_proccess(filename, action, &warehouse);
+                res = 1;
             }
             else {
                 print_error();
@@ -214,7 +257,9 @@ void proccess(int employee) {
     }
     else {
         print_error();
+        exit(EXIT_SUCCESS);
     }
+    return res;
 }
 
 void print_error() {
@@ -243,4 +288,3 @@ void add_to_file(char* filename, char* report) {
     }
     free(report);
 }
-
