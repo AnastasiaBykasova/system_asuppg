@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "structs.h"
+#include "my_lib.h"
+void the_end(void);
+
 
 Staff create_staff();
 char* report_staff_headquarters(StaffHeadquarters* staff_headquarters, int i);
@@ -15,7 +17,9 @@ void print_error();
 int calculate_salary(char* position);
 
 void staff_proccess(char* filename, int action, StaffHeadquarters* staff_headquarters) {
-    while((action = switch_action()) != 3) {
+    int for_exit = 0;
+    for_exit = atexit(the_end);
+    while((action = switch_action()) != 3 && !for_exit) {
         if (action == 1) {
             print_file(filename);
         } else if (action == 2) {
@@ -29,8 +33,8 @@ void staff_proccess(char* filename, int action, StaffHeadquarters* staff_headqua
         } else {
             print_error();
         }
-
     }
+    exit(EXIT_SUCCESS);
 }
 
 Staff create_staff() {
@@ -114,3 +118,8 @@ void clear_staff_headquarters(StaffHeadquarters* staff_headquarters) {
     }
     staff_headquarters->quantity = 0;
 }
+
+
+// void the_end(void) {   
+//    puts("Работа завершена.");
+// }

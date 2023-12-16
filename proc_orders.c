@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "structs.h"
+#include "my_lib.h"
+void the_end(void);
 
 Product create_product();
 char* report_order(Order* order, int i);
@@ -19,7 +20,9 @@ Order create_order();
 // void contact_customer(Order* order, char* message);
 
 void product_proccess(char* filename, int action, Order* order) {
-    while((action = switch_action()) != 3) {
+    int for_exit = 0;
+    for_exit = atexit(the_end);
+    while((action = switch_action()) != 3 && !for_exit) {
         if (action == 1) {
             print_file(filename);
         } else if (action == 2) {
@@ -36,6 +39,7 @@ void product_proccess(char* filename, int action, Order* order) {
         }
 
     }
+    exit(EXIT_SUCCESS);
 }
 
 Product create_product() {

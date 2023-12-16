@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "structs.h"
+#include "my_lib.h"
+void the_end(void);
 
 Material create_material();
 char* report_warehouse(Warehouse* warehouse, int i);
@@ -13,7 +14,9 @@ void add_to_file(char* filename, char* report);
 void print_error();
 
 void warehouse_proccess(char* filename, int action, Warehouse* warehouse) {
-    while((action = switch_action()) != 3) {
+    int for_exit = 0;
+    for_exit = atexit(the_end);
+    while((action = switch_action()) != 3 && !for_exit) {
         if (action == 1) {
             print_file(filename);
         } else if (action == 2) {
@@ -28,6 +31,7 @@ void warehouse_proccess(char* filename, int action, Warehouse* warehouse) {
         }
 
     }
+    exit(EXIT_SUCCESS);
 }
 
 Material create_material() {

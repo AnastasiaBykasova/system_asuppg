@@ -1,3 +1,31 @@
+Я написала код. На данный момент он запускает приложение, в котором работает окно авторизации.
+Но при нажатии на кнопку "Войти" работа программы продолжается в консоли, потому что вызываются функции
+warehouse_proccess, product_proccess и staff_proccess, которые работают одинаково, вот их пример:
+void warehouse_proccess(char* filename, int action, Warehouse* warehouse) {
+    int for_exit = 0;
+    for_exit = atexit(the_end);
+    while((action = switch_action()) != 3 && !for_exit) {
+        if (action == 1) {
+            print_file(filename);
+        } else if (action == 2) {
+            Material new_material = create_material();
+            add_material(warehouse, new_material);
+            for (int i = 0; i < 1; i++) {
+                char* string = report_warehouse(warehouse, i);
+                add_to_file(filename, string);
+            }
+        } else {
+            print_error();
+        }
+
+    }
+    exit(EXIT_SUCCESS);
+}
+Так как там используются обычные printf и другие функции стандартного ввода и вывода, приложение становится консольным. Сделать так, чтобы 
+при нажатии на кнопку "Войти" продолжалась работа в приложении без перехода в консоль.
+То есть новое окно должно открываться после нажатия на кнопку "Войти" в предыдущем окне.
+
+Код:
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

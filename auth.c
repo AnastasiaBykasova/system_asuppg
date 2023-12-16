@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "structs.h"
+#include "my_lib.h"
 
 
 int check_data(char* user_name, char* password) {
