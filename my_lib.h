@@ -4,14 +4,6 @@
 #define MAX_FILENAME_LENGTH 20
 #define MAX_NAME_LENGTH 50
 
-// Ваш заголовочный файл
-#define COLUMN_ID 0
-#define COLUMN_NAME 1
-#define COLUMN_STATUS 2
-#define COLUMN_POSITION 3
-#define COLUMN_SALARY 4
-
-
 // Структура Material
 typedef struct {
     char name[100];

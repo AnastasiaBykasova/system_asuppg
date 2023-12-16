@@ -26,8 +26,6 @@ int switch_system_admin() {
     return res;
 }
 
-
-
 int switch_action() {
     int choice;
     printf("\nВыберите действие:\n1. Показать данные\n2. Добавить данные\n3. Завершить\n");
