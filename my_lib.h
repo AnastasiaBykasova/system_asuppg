@@ -34,7 +34,6 @@ typedef struct {
     char status[20];
 } Order;
 
-
 // Структура Staff
 typedef struct {
     // int id;

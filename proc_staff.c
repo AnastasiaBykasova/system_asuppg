@@ -5,8 +5,6 @@
 #include <sqlite3.h>
 
 void the_end(void);
-
-
 Staff create_staff();
 char* report_staff_headquarters(StaffHeadquarters* staff_headquarters, int i);
 void add_staff(StaffHeadquarters* staff_headquarters, Staff staff);
@@ -16,7 +14,8 @@ void clear_staff_headquarters(StaffHeadquarters* staff_headquarters);
 int switch_action();
 void add_to_file(char* filename, char* report);
 void print_error();
-int calculate_salary(char* position);
+// int calculate_salary(char* position);
+int calculate_salary( const char* position);
 
 void staff_proccess(char* filename, int action, StaffHeadquarters* staff_headquarters) {
     int for_exit = 0;
@@ -104,7 +103,7 @@ char* report_staff_headquarters(StaffHeadquarters* staff_headquarters, int i) {
     return report;
 }
 
-int calculate_salary(char* position) {
+int calculate_salary( const char* position) {
     int salary = 0;
     if (strcmp(position, "Менеджер") == 0) {
         salary = 60000;
@@ -126,10 +125,6 @@ void clear_staff_headquarters(StaffHeadquarters* staff_headquarters) {
 }
 
 
-// void the_end(void) {   
-//    puts("Работа завершена.");
-// }
-
 void db_connect() {
     sqlite3 *db;
     char *err_msg = 0;
@@ -142,7 +137,7 @@ void db_connect() {
     }
 
     char *sql = "CREATE TABLE IF NOT EXISTS Staff(Name TEXT, Passport INT, SNILS INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN INT);"
-                "INSERT INTO Staff VALUES('Alice', 1234567890, 11112222333, 'Менеджер', 60000, 'Работает', '25.08.23', '89991234567', 111266677889);";
+                "INSERT INTO Staff VALUES('Monika', 1267890, 111333, 'Инженер', 60000, 'Работает', '22.05.23', '8999567', 117889);";
                 // "INSERT INTO Users VALUES(2, 'Bob', 30);"
                 // "INSERT INTO Users VALUES(3, 'Charlie', 22);";
 
@@ -159,7 +154,7 @@ void db_connect() {
 
 }
 
-void select_from_staff_table() {
+void show_staff() {
     sqlite3 *db;
     // char *err_msg = 0;
 
