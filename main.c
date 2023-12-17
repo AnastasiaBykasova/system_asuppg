@@ -8,12 +8,15 @@
 static GtkWidget *personnel_radio_button;
 static GtkWidget *orders_radio_button;
 static GtkWidget *warehouse_radio_button;
+static GtkWidget *show_radio_button;
+static GtkWidget *add_radio_button;
+static GtkWidget *end_radio_button;
 static GtkWidget *grid; // Объявляем grid как глобальную переменную, чтобы иметь к ней доступ из разных функций
 // Глобальные переменные для элементов окна выбора подсистемы
 GtkWidget *entry_username;
 GtkWidget *entry_password;
 GtkWidget *auth_button;
-GtkWidget *v_box = NULL;
+// GtkWidget *v_box = NULL;
 // GtkWidget *window;
 
 int proccess(int employee);
@@ -34,8 +37,11 @@ static void on_warehouse_button_clicked(GtkWidget *widget, gpointer data);
 // static void choose_subsystem_window(GtkApplication *app, gpointer user_data, int employee);
 static void choose_subsystem_window(GtkApplication *app, gpointer user_data);
 static void on_subsystem_button_clicked(GtkWidget *widget, gpointer user_data);
-static void on_staff_button_clicked(GtkWidget *widget, gpointer window);
+static void on_action_button_clicked(GtkWidget *widget, gpointer window);
 static void choose_action_window(GtkApplication *app, gpointer user_data);
+
+void db_connect();
+void select_from_staff_table();
 
 // Объявляем структуру, которая будет хранить данные
 // В структуре AppData добавьте указатель на grid
@@ -60,6 +66,12 @@ int main(int argc, char **argv) {
     g_object_unref(app);
 
     return status;
+    
+    // db_connect();
+    // select_from_staff_table();
+
+
+    return 0;
 }
 
 // Обработчик события нажатия кнопки "Войти"
@@ -73,13 +85,22 @@ static void on_auth_button_clicked(GtkWidget *widget, gpointer user_data) {
         int employee = check_data((char*)username, (char*)password);
 
         if (employee != 0) {
-            g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
+            // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
             GtkApplication *app;
             app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
             if (employee == 1) {
+                g_print("Пользователь: администратор\n");
                 g_signal_connect(app, "activate", G_CALLBACK(choose_subsystem_window), NULL);
             }
             else {
+                if (employee == 2) {
+                    g_print("Пользователь: менеджер по продажам\n");
+                    g_print("Доступная подсистема: Заказы\n");
+                }
+                else {
+                    g_print("Пользователь: сотрудник склада\n");
+                    g_print("Доступная подсистема: Склад\n");
+                }
                 g_signal_connect(app, "activate", G_CALLBACK(choose_action_window), NULL);
             }
             g_application_run(G_APPLICATION(app), 0, 0);
@@ -93,8 +114,8 @@ static void on_subsystem_button_clicked(GtkWidget *widget, gpointer user_data) {
     AppData *data = (AppData*)user_data;
     char* subsystem = NULL;
     
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(personnel_radio_button))) {
-        g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(personnel_radio_button)) || gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(orders_radio_button)) || gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(warehouse_radio_button))) {
+        // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
         GtkApplication *app;
         app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
         
@@ -108,32 +129,15 @@ static void on_subsystem_button_clicked(GtkWidget *widget, gpointer user_data) {
 }
 
 
-// static void on_subsystem_button_clicked(GtkWidget *widget, gpointer window) {
-//     // AppData *data = (AppData*)user_data;
-//     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(personnel_radio_button))) {
-//         g_print("Выбран вариант: Персонал\n");
-//         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
-//     } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(orders_radio_button))) {
-//         g_print("Выбран вариант: Заказы\n");
-//         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
-//     } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(warehouse_radio_button))) {
-//         g_print("Выбран вариант: Склад\n");
-//         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
-//     }
-//     // g_object_unref(app);
-//     // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
-//     // g_slice_free(AppData, data); // Освобождаем память
-// }
-
-static void on_staff_button_clicked(GtkWidget *widget, gpointer window) {
+static void on_action_button_clicked(GtkWidget *widget, gpointer window) {
     // AppData *data = (AppData*)user_data;
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(personnel_radio_button))) {
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(show_radio_button))) {
         g_print("Выбран вариант: Показать\n");
         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
-    } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(orders_radio_button))) {
+    } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(add_radio_button))) {
         g_print("Выбран вариант: Добавить\n");
         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
-    } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(warehouse_radio_button))) {
+    } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(end_radio_button))) {
         g_print("Выбран вариант: Завершить\n");
         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
     }
@@ -234,7 +238,7 @@ static void choose_subsystem_window(GtkApplication *app, gpointer user_data) {
     orders_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(personnel_radio_button), "Заказы");
     gtk_grid_attach(GTK_GRID(grid), orders_radio_button, 0, 2, 1, 1);
 
-    warehouse_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(personnel_radio_button), "Склад");
+    warehouse_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(orders_radio_button), "Склад");
     gtk_grid_attach(GTK_GRID(grid), warehouse_radio_button, 0, 3, 1, 1);
 
     button_next = gtk_button_new_with_label("Далее");
@@ -261,21 +265,68 @@ static void choose_action_window(GtkApplication *app, gpointer user_data) {
     gtk_grid_attach(GTK_GRID(grid), label, 0, 0, 1, 1);
 
     // Добавляем радиокнопки для вариантов ответа
-    personnel_radio_button = gtk_radio_button_new_with_label(NULL, "Показать данные");
-    gtk_grid_attach(GTK_GRID(grid), personnel_radio_button, 0, 1, 1, 1);
+    show_radio_button = gtk_radio_button_new_with_label(NULL, "Показать данные");
+    gtk_grid_attach(GTK_GRID(grid), show_radio_button, 0, 1, 1, 1);
 
-    orders_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(personnel_radio_button), "Добавить данные");
-    gtk_grid_attach(GTK_GRID(grid), orders_radio_button, 0, 2, 1, 1);
+    add_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(show_radio_button), "Добавить данные");
+    gtk_grid_attach(GTK_GRID(grid), add_radio_button, 0, 2, 1, 1);
 
-    warehouse_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(personnel_radio_button), "Завершить");
-    gtk_grid_attach(GTK_GRID(grid), warehouse_radio_button, 0, 3, 1, 1);
+    end_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(add_radio_button), "Завершить");
+    gtk_grid_attach(GTK_GRID(grid), end_radio_button, 0, 3, 1, 1);
 
     button_next = gtk_button_new_with_label("Далее");
-    g_signal_connect(button_next, "clicked", G_CALLBACK(on_staff_button_clicked), window);
+    g_signal_connect(button_next, "clicked", G_CALLBACK(on_action_button_clicked), window);
     gtk_grid_attach(GTK_GRID(grid), button_next, 0, 4, 1, 1); // Сохраняем координаты как 0, 4, 1, 1
 
     gtk_widget_show_all(window);
 }
+
+// static void add_staff(GtkApplication *app, gpointer user_data) {
+//     GtkWidget *window;
+//     // GtkWidget *grid;
+//     GtkWidget *subsystem_label; // Добавляем для отображения подсистемы
+//     GtkWidget *button;
+
+//     window = gtk_application_window_new(app);
+//     gtk_window_set_title(GTK_WINDOW(window), "Welcome to AsuPpg!");
+//     gtk_window_set_default_size(GTK_WINDOW(window), 800, 800);
+
+//     grid = gtk_grid_new();
+//     gtk_container_add(GTK_CONTAINER(window), grid);
+
+//     // Создаем виджеты для аутентификации
+//     GtkWidget *entry_username = gtk_entry_new();
+//     gtk_entry_set_placeholder_text(GTK_ENTRY(entry_username), "Username");
+//     gtk_grid_attach(GTK_GRID(grid), entry_username, 0, 0, 1, 1);
+
+//     GtkWidget *entry_password = gtk_entry_new();
+//     gtk_entry_set_visibility(GTK_ENTRY(entry_password), FALSE);
+//     gtk_entry_set_placeholder_text(GTK_ENTRY(entry_password), "Password");
+//     gtk_grid_attach(GTK_GRID(grid), entry_password, 0, 1, 1, 1);
+
+//     GtkWidget *auth_button = gtk_button_new_with_label("Войти");
+//     gtk_grid_attach(GTK_GRID(grid), auth_button, 0, 2, 1, 1);
+
+//     // Создаем виджеты для выбора подсистемы
+//     subsystem_label = gtk_label_new("Выберите один из вариантов:");
+//     // Создаем остальные виджеты для выбора подсистемы
+
+//     AppData *data = g_slice_new(AppData);
+//     data->app = app;
+//     data->entry_username = entry_username;
+//     data->entry_password = entry_password;
+//     data->grid = grid;  // Сохраняем grid в структуре AppData
+//     data->main_window = window;  // Сохраняем указатель на главное окно в структуре AppData
+//     grid = grid;
+
+//     button = gtk_button_new_with_label("Войти");
+//     g_signal_connect(button, "clicked", G_CALLBACK(on_auth_button_clicked), data);
+//     gtk_grid_attach(GTK_GRID(grid), button, 0, 2, 1, 1);
+   
+//     gtk_widget_show_all(window);
+   
+// }
+
 
 
 
@@ -364,3 +415,4 @@ void add_to_file(char* filename, char* report) {
     }
     free(report);
 }
+

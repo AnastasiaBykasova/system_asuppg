@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "my_lib.h"
+#include <sqlite3.h>
+
 void the_end(void);
 
 
@@ -44,6 +46,20 @@ Staff create_staff() {
     fflush(stdout);
     scanf("%s", new_staff.name);
 
+    printf("Введите паспорт сотрудника: ");
+    fflush(stdout);
+    scanf("%d", &new_staff.passport);
+
+    printf("Введите СНИЛС сотрудника: ");
+    fflush(stdout);
+    scanf("%d", &new_staff.snils);
+
+    printf("Введите должность сотрудника: ");
+    fflush(stdout);
+    scanf("%s", new_staff.position);
+
+    new_staff.salary = calculate_salary(new_staff.position);
+    
     printf("Введите статус сотрудника: ");
     fflush(stdout);
     scanf("%s", new_staff.status);
@@ -52,24 +68,14 @@ Staff create_staff() {
     fflush(stdout);
     scanf("%s", new_staff.emp_date);
 
-    printf("Введите паспорт сотрудника: ");
-    fflush(stdout);
-    scanf("%s", new_staff.passport);
-
-    printf("Введите ИНН сотрудника: ");
-    fflush(stdout);
-    scanf("%s", new_staff.inn);
-    
     printf("Введите номер телефона сотрудника: ");
     fflush(stdout);
-    scanf("%s", new_staff.phone_num);
-
-    printf("Введите должность сотрудника: ");
+    scanf("%d", &new_staff.phone_num);
+    
+    printf("Введите ИНН сотрудника: ");
     fflush(stdout);
-    scanf("%s", new_staff.position);
-
-    new_staff.salary = calculate_salary(new_staff.position);
-
+    scanf("%d", &new_staff.inn);
+    
     return new_staff;
 }
 
@@ -89,7 +95,7 @@ char* report_staff_headquarters(StaffHeadquarters* staff_headquarters, int i) {
     if (staff_headquarters->staff[i] != NULL) {
         strcpy(report, "");
         char temp[1000];
-        sprintf(temp, "id: %d; Имя: %s; Статус: %s; Паспорт: %s; Должность: %s; Оклад: %d; Дата оформления: %s; Номер телефона: %s; ИНН: %s\n", staff_headquarters->staff[i]->id, staff_headquarters->staff[i]->name, staff_headquarters->staff[i]->status, staff_headquarters->staff[i]->passport, staff_headquarters->staff[i]->position, staff_headquarters->staff[i]->salary, staff_headquarters->staff[i]->emp_date, staff_headquarters->staff[i]->phone_num, staff_headquarters->staff[i]->inn);
+        sprintf(temp, "Имя: %s; Паспорт: %d; СНИЛС: %d, Должность: %s; Оклад: %d; Статус: %s; Дата оформления: %s; Номер телефона: %d; ИНН: %d\n", staff_headquarters->staff[i]->name, staff_headquarters->staff[i]->passport, staff_headquarters->staff[i]->snils, staff_headquarters->staff[i]->position, staff_headquarters->staff[i]->salary, staff_headquarters->staff[i]->status, staff_headquarters->staff[i]->emp_date, staff_headquarters->staff[i]->phone_num, staff_headquarters->staff[i]->inn);
         strncat(report, temp, 1000 - strlen(report) - 1);
     } else {
         strcpy(report, "Invalid staff\n");
@@ -123,3 +129,72 @@ void clear_staff_headquarters(StaffHeadquarters* staff_headquarters) {
 // void the_end(void) {   
 //    puts("Работа завершена.");
 // }
+
+void db_connect() {
+    sqlite3 *db;
+    char *err_msg = 0;
+
+    int rc = sqlite3_open("asuppg.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        // return 1;
+    }
+
+    char *sql = "CREATE TABLE IF NOT EXISTS Staff(Name TEXT, Passport INT, SNILS INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN INT);"
+                "INSERT INTO Staff VALUES('Alice', 1234567890, 11112222333, 'Менеджер', 60000, 'Работает', '25.08.23', '89991234567', 111266677889);";
+                // "INSERT INTO Users VALUES(2, 'Bob', 30);"
+                // "INSERT INTO Users VALUES(3, 'Charlie', 22);";
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+    } else {
+        fprintf(stdout, "Table created successfully\n");
+        // printf("Hii");
+    }
+
+    sqlite3_close(db);
+
+}
+
+void select_from_staff_table() {
+    sqlite3 *db;
+    // char *err_msg = 0;
+
+    int rc = sqlite3_open("asuppg.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char *sql = "SELECT * FROM Staff;";
+
+    sqlite3_stmt *res;
+    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    int step = sqlite3_step(res);
+    while (step == SQLITE_ROW) {
+        printf("%s|", sqlite3_column_text(res, 0));
+        printf("%s|", sqlite3_column_text(res, 1));
+        printf("%s|", sqlite3_column_text(res, 2));
+        printf("%s|", sqlite3_column_text(res, 3));
+        printf("%s|", sqlite3_column_text(res, 4));
+        printf("%s|", sqlite3_column_text(res, 5));
+        printf("%s|", sqlite3_column_text(res, 6));
+        printf("%s|", sqlite3_column_text(res, 7));
+        printf("%s\n", sqlite3_column_text(res, 8));
+
+        step = sqlite3_step(res);
+    }
+
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+}

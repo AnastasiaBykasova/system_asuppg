@@ -37,15 +37,16 @@ typedef struct {
 
 // Структура Staff
 typedef struct {
-    int id;
+    // int id;
     char name[100];
-    char status[100];
-    char emp_date[12];
-    char inn[11];
-    char passport[10];
-    char phone_num[12];
+    int passport;
+    int snils;
     char position[20];
     int salary;
+    char status[100];
+    char emp_date[12];
+    int phone_num;
+    int inn;
 } Staff;
 
 // Структура 
