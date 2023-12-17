@@ -54,7 +54,9 @@ static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data);
 // void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn);
 // void add_staff_to_table(char *name, const char *passport, const char *snils, char *position, const int salary, const char *status, const char *emp_date, const int phone_num, const int inn);
 // void add_staff_to_table(char *name, const char *passport, const char *snils, char *position, const int salary, const char *status, const char *emp_date, const int phone_num, const int inn);
-void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn);
+// void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn);
+void add_staff_to_table(const char *name, int passport, int snils, const char *position, int salary, const char *status, const char *emp_date, int phone_num, int inn);
+
 
 
 // void add_staff_to_table(const char *name, const char *passport, const char *snils, const char *position, const char *status, const char *emp_date, const char *phone_num, const char *inn);
@@ -70,6 +72,22 @@ typedef struct {
     int employee;
     GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
 } AppData;
+
+typedef struct {
+    GtkApplication *app;
+    GtkWidget *window;
+    GtkWidget *main_window;
+    GtkWidget *name;
+    GtkWidget *passport;
+    GtkWidget *snils;
+    GtkWidget *position;
+    // int salary;
+    GtkWidget *status;
+    GtkWidget *emp_date;
+    GtkWidget *phone_num;
+    GtkWidget *inn;
+    GtkWidget *grid;  // добавляем указатель на grid в структуру StaffAdd
+} StaffAdd;
 
 
 int main(int argc, char **argv) {
@@ -144,19 +162,39 @@ static void on_subsystem_button_clicked(GtkWidget *widget, gpointer user_data) {
 }
 
 static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data) {
-    AppData *data = (AppData*)user_data;
-    
-    GtkApplication *app;
-    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-    
-    g_signal_connect(app, "activate", G_CALLBACK(show_staff_in_window), NULL);
-    
-    g_application_run(G_APPLICATION(app), 0, 0);
-    g_object_unref(app);
+    StaffAdd *data = (StaffAdd*)user_data;
+
+    const char *name = gtk_entry_get_text(GTK_ENTRY(data->name));
+    const char *passport_text = gtk_entry_get_text(GTK_ENTRY(data->passport));
+    const char *snils_text = gtk_entry_get_text(GTK_ENTRY(data->snils));
+    const char *position = gtk_entry_get_text(GTK_ENTRY(data->position));
+    const char *status = gtk_entry_get_text(GTK_ENTRY(data->status));
+    const char *emp_date = gtk_entry_get_text(GTK_ENTRY(data->emp_date));
+    const char *phone_num_text = gtk_entry_get_text(GTK_ENTRY(data->phone_num));
+    const char *inn_text = gtk_entry_get_text(GTK_ENTRY(data->inn));
+
+    // Проверяем, что ни один из полученных указателей не является нулевым или строкой нулевой длины
+    if (name && *name != '\0' && passport_text && *passport_text != '\0' && snils_text && *snils_text != '\0' &&
+        position && *position != '\0' && status && *status != '\0' && emp_date && *emp_date != '\0' &&
+        phone_num_text && *phone_num_text != '\0' && inn_text && *inn_text != '\0') {
         
-    
-    g_slice_free(AppData, data); // Освобождаем память
+        // Преобразуем текст в целые числа
+        int passport = atoi(passport_text);
+        int snils = atoi(snils_text);
+        int phone_num = atoi(phone_num_text);
+        int inn = atoi(inn_text);
+
+        // Вызываем функцию для добавления сотрудника в базу данных
+        add_staff_to_table(name, passport, snils, position, phone_num, status, emp_date, phone_num, inn);
+    } else {
+        // Выводим сообщение об ошибке, если какой-либо из полученных указателей некорректен или данные некорректны
+        printf("Ошибка: некорректные данные в полях ввода!\n");
+    }
+
+    g_slice_free(StaffAdd, data); // Освобождаем память
 }
+
+
 
 
 static void on_action_button_clicked(GtkWidget *widget, gpointer window, gpointer user_data) {
@@ -171,8 +209,6 @@ static void on_action_button_clicked(GtkWidget *widget, gpointer window, gpointe
         
         g_application_run(G_APPLICATION(app), 0, 0);
         g_object_unref(app);
-
-
         
         // g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
     } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(add_radio_button))) {
@@ -453,18 +489,18 @@ void select_from_staff_table(GtkListStore *store) {
 // Функция для создания графического интерфейса и добавления элементов
 static void add_staff(GtkApplication *app, gpointer user_data) {
     GtkWidget *window;
-    // GtkWidget *grid;
+    GtkWidget *grid;
     GtkWidget *subsystem_label; // Добавляем для отображения подсистемы
     GtkWidget *button;
 
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Добавление персонала");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 800);
-    gtk_window_move(GTK_WINDOW(window), 100, 100);  // Новые координаты окна (x, y)
-    // gtk_window_fullscreen(GTK_WINDOW(window));
+    gtk_window_move(GTK_WINDOW(window), 100, 100); 
 
+    // grid = GTK_GRID(gtk_grid_new());
     grid = gtk_grid_new();
-    gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(grid));
 
     // Создаем виджеты для аутентификации
     GtkWidget *staff_name = gtk_entry_new();
@@ -506,12 +542,22 @@ static void add_staff(GtkApplication *app, gpointer user_data) {
     // subsystem_label = gtk_label_new("Выберите один из вариантов:");
     // Создаем остальные виджеты для выбора подсистемы
 
-    AppData *data = g_slice_new(AppData);
+    StaffAdd *data = g_slice_new(StaffAdd);
     data->app = app;
-    data->entry_username = entry_username;
-    data->entry_password = entry_password;
-    data->grid = grid;  // Сохраняем grid в структуре AppData
-    data->main_window = window;  // Сохраняем указатель на главное окно в структуре AppData
+    data->name = staff_name;
+    data->passport = staff_passport;
+    data->snils = staff_snils;
+    data->position = staff_position;
+    // data->salary = calculate_salary(data->position);
+    data->status = staff_status;
+    data->emp_date = staff_date;
+    data->phone_num = staff_phone;
+    data->inn = staff_inn;
+
+
+
+    data->inn = staff_inn;
+    data->window = window; // Добавим окно в структуру, чтобы его можно было освободить
 
     // Запоминаем grid
     grid = grid;
@@ -533,7 +579,9 @@ static void add_staff(GtkApplication *app, gpointer user_data) {
 
 
 // Добавляет данные персонала в базу данных
-void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn) {
+// void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn) {
+void add_staff_to_table(const char *name, int passport, int snils, const char *position, int salary, const char *status, const char *emp_date, int phone_num, int inn) {
+
     // Создадим экземпляр структуры Staff и заполним его полученными данными
     Staff new_staff;
     
@@ -651,28 +699,5 @@ int proccess(int employee) {
 
 void print_error() {
     printf("Error\n");
-}
-
-void print_file(char* filename) {
-    printf("Содержимое файла %s:\n", filename);
-    FILE* file = fopen(filename, "r");
-    if (file != NULL) {
-        char buffer[1000];
-        while (fgets(buffer, 1000, file) != NULL) {
-            printf("%s", buffer);
-        }
-        fclose(file);
-    } else {
-        printf("Ошибка открытия файла\n");
-    }
-}
-
-void add_to_file(char* filename, char* report) {
-    FILE *file = fopen(filename, "a+");
-    if (file != NULL) {
-        fputs(report, file);
-        fclose(file);
-    }
-    free(report);
 }
 

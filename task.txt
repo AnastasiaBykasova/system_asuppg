@@ -1,48 +1,63 @@
 Я реализую функцию, которая запускает приложение gtk+, открывает окно приложения, в котором
 есть поля для ввода данных о сотруднике (это уже реализовано и работает), и эти данные необходимо сохранить в базе данных asuppg.db.
 
-на основе функции add_staff исправь функцию add_staff_to_table, чтобы данные при вводе (при нажатии на кнопку "Добавить")
-сохранялись сначала в структуру Staff, а потом в БД.
+Запускаю программу, ввожу необходимые данные, нажимаю кнопку "Добавить" и программа завершается с ошибкой Segmentation fault. Исправь ее
 
-Также исправить ошибки:
 
-"main.c: In function ‘add_staff_to_table’:
-main.c:554:31: warning: passing argument 3 of ‘sqlite3_bind_text’ makes pointer from integer without a cast [-Wint-conversion]
-  554 |     sqlite3_bind_text(res, 2, passport, -1, SQLITE_TRANSIENT);
-      |                               ^~~~~~~~
-      |                               |
-      |                               int
-In file included from main.c:6:
-/usr/include/sqlite3.h:4517:52: note: expected ‘const char *’ but argument is of type ‘int’
- 4517 | SQLITE_API int sqlite3_bind_text(sqlite3_stmt*,int,const char*,int,void(*)(void*));
-      |                                                    ^~~~~~~~~~~
-main.c:555:31: warning: passing argument 3 of ‘sqlite3_bind_text’ makes pointer from integer without a cast [-Wint-conversion]
-  555 |     sqlite3_bind_text(res, 3, snils, -1, SQLITE_TRANSIENT);
-      |                               ^~~~~
-      |                               |
-      |                               int
-In file included from main.c:6:
-/usr/include/sqlite3.h:4517:52: note: expected ‘const char *’ but argument is of type ‘int’
- 4517 | SQLITE_API int sqlite3_bind_text(sqlite3_stmt*,int,const char*,int,void(*)(void*));
-      |                                                    ^~~~~~~~~~~
-      "
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "my_lib.h"
+#include <gtk/gtk.h>
+#include <sqlite3.h>
 
-Код для исправления:
+static GtkWidget *personnel_radio_button;
+static GtkWidget *orders_radio_button;
+static GtkWidget *warehouse_radio_button;
+static GtkWidget *show_radio_button;
+static GtkWidget *add_radio_button;
+static GtkWidget *end_radio_button;
+static GtkWidget *grid; // Объявляем grid как глобальную переменную, чтобы иметь к ней доступ из разных функций
+// Глобальные переменные для элементов окна выбора подсистемы
+GtkWidget *entry_username;
+GtkWidget *entry_password;
+GtkWidget *auth_button;
 
-// Структура Staff
-typedef struct {
-    // int id;
-    char name[100];
-    int passport;
-    int snils;
-    char position[20];
-    int salary;
-    char status[100];
-    char emp_date[12];
-    int phone_num;
-    int inn;
-} Staff;
+int proccess(int employee);
+int check_data(char* user_name, char* password);
+int switch_system_admin();
+void print_error();
+void the_end(void);
+// int calculate_salary(char* position);
+int calculate_salary( const char* position);
 
+void warehouse_proccess(char* filename, int action, Warehouse* warehouse);
+void staff_proccess(char* filename, int action, StaffHeadquarters* staff_headquarters);
+void product_proccess(char* filename, int action, Order* order);
+static void on_auth_button_clicked(GtkWidget *widget, gpointer data);
+static void activate (GtkApplication* app, gpointer user_data);
+static void on_orders_button_clicked(GtkWidget *widget, gpointer data);
+// static void on_subsystem_button_clicked(GtkWidget *widget, GtkApplication* app);
+static void on_warehouse_button_clicked(GtkWidget *widget, gpointer data);
+
+// static void choose_subsystem_window(GtkApplication *app, gpointer user_data, int employee);
+static void choose_subsystem_window(GtkApplication *app, gpointer user_data);
+static void on_subsystem_button_clicked(GtkWidget *widget, gpointer user_data);
+static void on_action_button_clicked(GtkWidget *widget, gpointer window, gpointer user_data);
+static void choose_action_window(GtkApplication *app, gpointer user_data);
+static void show_staff_in_window(GtkApplication *app, GtkWidget *widget, gpointer user_data);
+static void add_staff(GtkApplication *app, gpointer user_data);
+
+void select_from_staff_table(GtkListStore *store);
+static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data);
+void add_staff_to_table(const char *name, int passport, int snils, const char *position, int salary, const char *status, const char *emp_date, int phone_num, int inn);
+
+
+
+// void add_staff_to_table(const char *name, const char *passport, const char *snils, const char *position, const char *status, const char *emp_date, const char *phone_num, const char *inn);
+// void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn);
+// Объявляем структуру, которая будет хранить данные
+// В структуре AppData добавьте указатель на grid
 typedef struct {
     GtkApplication *app;
     GtkWidget *window;
@@ -52,6 +67,63 @@ typedef struct {
     int employee;
     GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
 } AppData;
+
+typedef struct {
+    GtkApplication *app;
+    GtkWidget *window;
+    GtkWidget *main_window;
+    GtkWidget *name;
+    GtkWidget *passport;
+    GtkWidget *snils;
+    GtkWidget *position;
+    // int salary;
+    GtkWidget *status;
+    GtkWidget *emp_date;
+    GtkWidget *phone_num;
+    GtkWidget *inn;
+    GtkWidget *grid;  // добавляем указатель на grid в структуру StaffAdd
+} StaffAdd;
+
+
+int main(int argc, char **argv) {
+
+    GtkApplication *app;
+    int status;
+
+    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect(app, "activate", G_CALLBACK(add_staff), NULL);
+    status = g_application_run(G_APPLICATION(app), argc, argv);
+    g_object_unref(app);
+
+    return status;
+
+    // db_connect();
+    // show_staff();
+    // return 0;
+}
+
+
+static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data) {
+    // AppData *data = (AppData*)user_data;
+    StaffAdd *data = (StaffAdd*)user_data;
+
+    // Извлекаем данные из полей ввода
+    const gchar *name = gtk_entry_get_text(GTK_ENTRY(data->name));
+    int passport = atoi(gtk_entry_get_text(GTK_ENTRY(data->passport)));
+    int snils = atoi(gtk_entry_get_text(GTK_ENTRY(data->snils)));
+    const gchar *position = gtk_entry_get_text(GTK_ENTRY(data->position));
+    int salary = calculate_salary(position); // используем calculate_salary для вычисления зарплаты
+    const gchar *status = gtk_entry_get_text(GTK_ENTRY(data->status));
+    const gchar *emp_date = gtk_entry_get_text(GTK_ENTRY(data->emp_date));
+    int phone_num = atoi(gtk_entry_get_text(GTK_ENTRY(data->phone_num)));
+    int inn = atoi(gtk_entry_get_text(GTK_ENTRY(data->inn)));
+
+    // Вызываем функцию для добавления сотрудника в базу данных
+    add_staff_to_table(name, passport, snils, position, salary, status, emp_date, phone_num, inn);
+
+    g_slice_free(StaffAdd, data); // Освобождаем память
+}
+
 
 
 
@@ -104,6 +176,23 @@ static void add_staff(GtkApplication *app, gpointer user_data) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(staff_inn), "ИНН");
     gtk_grid_attach(GTK_GRID(grid), staff_inn, 0, 7, 1, 1);
 
+    // GtkWidget *add_staff_button = gtk_button_new_with_label("Добавить");
+    // gtk_grid_attach(GTK_GRID(grid), add_staff_button, 0, 8, 1, 1);
+
+    // Создаем виджеты для выбора подсистемы
+    // subsystem_label = gtk_label_new("Выберите один из вариантов:");
+    // Создаем остальные виджеты для выбора подсистемы
+
+    AppData *data = g_slice_new(AppData);
+    data->app = app;
+    data->entry_username = entry_username;
+    data->entry_password = entry_password;
+    data->grid = grid;  // Сохраняем grid в структуре AppData
+    data->main_window = window;  // Сохраняем указатель на главное окно в структуре AppData
+
+    // Запоминаем grid
+    grid = grid;
+
     button = gtk_button_new_with_label("Добавить");
     g_signal_connect(button, "clicked", G_CALLBACK(on_add_staff_clicked), data);
     gtk_grid_attach(GTK_GRID(grid), button, 0, 8, 1, 1);
@@ -121,7 +210,25 @@ static void add_staff(GtkApplication *app, gpointer user_data) {
 
 
 // Добавляет данные персонала в базу данных
-void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn) {
+// void add_staff_to_table(char *name, int passport, int snils, char *position, int salary, char *status, char *emp_date, int phone_num, int inn) {
+void add_staff_to_table(const char *name, int passport, int snils, const char *position, int salary, const char *status, const char *emp_date, int phone_num, int inn) {
+
+    // Создадим экземпляр структуры Staff и заполним его полученными данными
+    Staff new_staff;
+    
+    strncpy(new_staff.name, name, 100);
+    new_staff.passport = passport;
+    new_staff.snils = snils;
+    strncpy(new_staff.position, position, 20);
+    new_staff.salary = salary;
+    strncpy(new_staff.status, status, 100);
+    strncpy(new_staff.emp_date, emp_date, 12);
+    new_staff.phone_num = phone_num;
+    new_staff.inn = inn;
+
+    // Теперь, когда у нас есть структура Staff с данными, мы можем их сохранить в базе данных
+    // Реализация добавления в базу данных остается практически такой же, как и прежде
+
     sqlite3 *db;
     char *err_msg = 0;
 
@@ -132,23 +239,20 @@ void add_staff_to_table(char *name, int passport, int snils, char *position, int
         return;
     }
 
-    // Используем подготовленный запрос, чтобы избежать проблем с типами и SQL-инъекциями
-    sqlite3_stmt *res;
     const char *sql = "INSERT INTO Staff VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    sqlite3_stmt *res;
     sqlite3_prepare_v2(db, sql, -1, &res, 0);
 
-    // Привязываем параметры запроса к значениям
-    sqlite3_bind_text(res, 1, name, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(res, 2, passport, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(res, 3, snils, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(res, 4, position, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(res, 5, salary);
-    sqlite3_bind_text(res, 6, status, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(res, 7, emp_date, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(res, 8, phone_num);
-    sqlite3_bind_int(res, 9, inn);
+    sqlite3_bind_text(res, 1, new_staff.name, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(res, 2, new_staff.passport);
+    sqlite3_bind_int(res, 3, new_staff.snils);
+    sqlite3_bind_text(res, 4, new_staff.position, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(res, 5, new_staff.salary);
+    sqlite3_bind_text(res, 6, new_staff.status, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(res, 7, new_staff.emp_date, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(res, 8, new_staff.phone_num);
+    sqlite3_bind_int(res, 9, new_staff.inn);
 
-    // Выполняем подготовленный запрос
     rc = sqlite3_step(res);
     if (rc != SQLITE_DONE) {
         fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
@@ -156,38 +260,10 @@ void add_staff_to_table(char *name, int passport, int snils, char *position, int
         fprintf(stdout, "Staff added successfully\n");
     }
 
-    // Освобождаем память и закрываем базу данных
     sqlite3_finalize(res);
     sqlite3_close(db);
 }
 
-
-
-
-int calculate_salary( const char* position) {
-    int salary = 0;
-    if (strcmp(position, "Менеджер") == 0) {
-        salary = 60000;
-    } else if (strcmp(position, "Инженер") == 0) {
-        salary = 80000;
-    } else if (strcmp(position, "Аналитик") == 0) {
-        salary = 70000;
-    } else if (strcmp(position, "Бухгалтер") == 0) {
-        salary = 65000;
-    }
-    return salary;
-}
-
-
-int main(int argc, char **argv) {
-
-    GtkApplication *app;
-    int status;
-
-    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect(app, "activate", G_CALLBACK(add_staff), NULL);
-    status = g_application_run(G_APPLICATION(app), argc, argv);
-    g_object_unref(app);
-
-    return status;
+void print_error() {
+    printf("Error\n");
 }
