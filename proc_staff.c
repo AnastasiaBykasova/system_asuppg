@@ -150,7 +150,7 @@ void clear_staff_headquarters(StaffHeadquarters* staff_headquarters) {
 }
 
 
-void db_connect() {
+void db_connect_staff() {
     sqlite3 *db;
     char *err_msg = 0;
 
@@ -164,17 +164,22 @@ void db_connect() {
     
 
 
-    // char *sql = "CREATE TABLE IF NOT EXISTS Staff(id INT, Name TEXT, Passport INT, SNILS INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN INT);"
-    //             "INSERT INTO Staff VALUES(3, 'Арсений', 578537, 98548754, 'Мастер', 100000, 'Работает', '14.10.23', '8578544', 1578487547);";
+    char *sql = "CREATE TABLE IF NOT EXISTS Staff(id INT, Name TEXT, Passport INT, SNILS INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN INT);"
+                "INSERT INTO Staff VALUES(1, 'Арсений2', 578537, 854854, 'Менеджер', 90000, 'Работает', '14.10.23', '8578544', 1578487547);"
+                "INSERT INTO Staff VALUES(2, 'Арсений3', 123456, 548754, 'Инженер', 110000, 'Работает', '14.10.23', '8578544', 1578487547);"
+                "INSERT INTO Staff VALUES(3, 'Арсений4', 098765, 948754, 'Аналитик', 90000, 'Работает', '14.10.23', '8578544', 1578487547);"
+                "INSERT INTO Staff VALUES(4, 'Арсений5', 443784, 985484, 'Юрист', 100000, 'Работает', '14.10.23', '8578544', 1578487547);";
     
-    char *sql = "DELETE FROM Staff WHERE id>1;";
+    // char *sql = "DELETE FROM Staff WHERE id>1;";
+    // char *sql = "SELECT * FROM Staff;";
+
     
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
     } else {
-        fprintf(stdout, "Table created successfully\n");
+        fprintf(stdout, "success\n");
         // printf("Hii");
     }
 

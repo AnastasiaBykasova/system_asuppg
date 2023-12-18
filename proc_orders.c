@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "my_lib.h"
+#include <sqlite3.h>
+
 void the_end(void);
 
 Product create_product();
@@ -61,9 +63,17 @@ Product create_product() {
     fflush(stdout);
     scanf("%d", &new_product.amount);
 
+    printf("Введите итоговую сумму оплаты: ");
+    fflush(stdout);
+    scanf("%d", &new_product.sum);
+
     printf("Введите тип оплаты: ");
     fflush(stdout);
     scanf("%s", new_product.pay_type);
+
+    printf("Введите дату оформления: ");
+    fflush(stdout);
+    scanf("%s", new_product.date);
 
     return new_product;
 }
@@ -84,7 +94,7 @@ char* report_order(Order* order, int i) {
     if (i < order->quantity) {
         strcpy(report, "");
         char temp[1000];
-        sprintf(temp, "Заказчик: %s; товар: %s; количество: %d; сумма: %d; тип оплаты: %s\n", order->product[i].customer, order->product[i].name, order->product[i].amount, (order->product[i].value)*(order->product[i].amount), order->product[i].pay_type);
+        sprintf(temp, "id: %d; Заказчик: %s; товар: %s; стоимость: %d; количество: %d; сумма: %d; оплата: %s; дата: %s\n", order->product[i].id, order->product[i].customer, order->product[i].name, order->product[i].value, order->product[i].amount, (order->product[i].value)*(order->product[i].amount), order->product[i].pay_type, order->product[i].date);
         strncat(report, temp, 1000 - strlen(report) - 1);
     } else {
         strcpy(report, "Invalid product\n");
@@ -97,20 +107,89 @@ void clear_order(Order* order) {
     order->quantity = 0;
 }
 
-// void track_order(Order* order) {
-//     // Логика отслеживания статуса заказа
-// }
-
-// void update_status(Order* order, char* newStatus) {
-//     strcpy(order->status, newStatus);
-// }
-
-// void contact_customer(Order* order, char* message) {
-//     // Логика связи с заказчиком
-// }
 
 Order create_order() {
     Order order;
     order.quantity = 0;
     return order;
+}
+
+
+void db_connect_orders() {
+    sqlite3 *db;
+    char *err_msg = 0;
+
+    int rc = sqlite3_open("asuppg.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        // return 1;
+    }
+    // char *sql = "DROP TABLE Staff;";
+    
+
+
+    char *sql = "CREATE TABLE IF NOT EXISTS Orders(id INT, Customer TEXT, Name TEXT, Value INT, Amount INT, Sum INT, PayType TEXT, Date TEXT);"
+                "INSERT INTO Orders VALUES(1, 'Арсений1', 'газоблок1', 500, 10, 5000, 'Карта', '14.10.23');"
+                "INSERT INTO Orders VALUES(2, 'Арсений2', 'газоблок2', 700, 10, 7000, 'Карта', '15.10.23');"
+                "INSERT INTO Orders VALUES(3, 'Арсений3', 'газоблок3', 20, 10, 200, 'Налич', '16.10.23');"
+                "INSERT INTO Orders VALUES(4, 'Арсений4', 'газоблок4', 500, 11, 5500, 'Карта', '17.10.23');";
+    
+    // char *sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='Orders';";
+    
+    // char *sql = "DELETE FROM Staff WHERE id>1;";
+    
+    // char *sql = "SELECT * FROM Orders;";
+
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+    } else {
+        fprintf(stdout, "success\n");
+        // printf("Hii");
+    }
+
+    sqlite3_close(db);
+
+}
+
+void show_order() {
+    sqlite3 *db;
+    // char *err_msg = 0;
+
+    int rc = sqlite3_open("asuppg.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char *sql = "SELECT * FROM Orders;";
+
+    sqlite3_stmt *res;
+    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    int step = sqlite3_step(res);
+    while (step == SQLITE_ROW) {
+        printf("%s|", sqlite3_column_text(res, 0));
+        printf("%s|", sqlite3_column_text(res, 1));
+        printf("%s|", sqlite3_column_text(res, 2));
+        printf("%s|", sqlite3_column_text(res, 3));
+        printf("%s|", sqlite3_column_text(res, 4));
+        printf("%s|", sqlite3_column_text(res, 5));
+        printf("%s|", sqlite3_column_text(res, 6));
+        printf("%s|\n", sqlite3_column_text(res, 7));
+
+        step = sqlite3_step(res);
+    }
+
+    sqlite3_finalize(res);
+    sqlite3_close(db);
 }

@@ -6,6 +6,7 @@
 
 // Структура Material
 typedef struct {
+    int id;
     char name[100];
     char param[100];
     int quantity;
@@ -19,11 +20,14 @@ typedef struct {
 
 // Структура Product
 typedef struct {
+    int id;
     char customer[MAX_NAME_LENGTH];
     char name[MAX_NAME_LENGTH];
     int value;
     int amount;
+    int sum;
     char pay_type[10];
+    char date[12];
 } Product;
 
 
@@ -40,7 +44,7 @@ typedef struct {
     char name[100];
     int passport;
     int snils;
-    char position[20];
+    char position[50];
     int salary;
     char status[100];
     char emp_date[12];

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "my_lib.h"
+#include <sqlite3.h>
+
 void the_end(void);
 
 Material create_material();
@@ -75,4 +77,81 @@ char* report_warehouse(Warehouse* warehouse, int i) {
     }
 
     return report;
+}
+
+
+
+void db_connect_materials() {
+    sqlite3 *db;
+    char *err_msg = 0;
+
+    int rc = sqlite3_open("asuppg.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        // return 1;
+    }
+    // char *sql = "DROP TABLE Staff;";
+    
+
+
+    char *sql = "CREATE TABLE IF NOT EXISTS Materials(id INT, Name TEXT, Param TEXT, Quantity INT);"
+                "INSERT INTO Materials VALUES(1, 'газоблок1', 'D200', 500);"
+                "INSERT INTO Materials VALUES(2, 'газоблок2', 'D300', 350);"
+                "INSERT INTO Materials VALUES(3, 'газоблок3', 'D400', 100);"
+                "INSERT INTO Materials VALUES(4, 'газоблок4', 'D500', 640);";
+    
+    // char *sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='Materials';";
+    
+    // char *sql = "DELETE FROM Materials WHERE id>0;";
+    
+    // char *sql = "SELECT * FROM Materials;";
+
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+    } else {
+        fprintf(stdout, "success\n");
+        // printf("Hii");
+    }
+
+    sqlite3_close(db);
+
+}
+
+void show_material() {
+    sqlite3 *db;
+    // char *err_msg = 0;
+
+    int rc = sqlite3_open("asuppg.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    char *sql = "SELECT * FROM Materials;";
+
+    sqlite3_stmt *res;
+    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    int step = sqlite3_step(res);
+    while (step == SQLITE_ROW) {
+        printf("%s|", sqlite3_column_text(res, 0));
+        printf("%s|", sqlite3_column_text(res, 1));
+        printf("%s|", sqlite3_column_text(res, 2));
+        printf("%s|\n", sqlite3_column_text(res, 3));
+        
+        step = sqlite3_step(res);
+    }
+
+    sqlite3_finalize(res);
+    sqlite3_close(db);
 }
