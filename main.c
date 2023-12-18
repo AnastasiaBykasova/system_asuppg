@@ -6,6 +6,8 @@
 
 #include "my_lib.h"
 
+static GtkWidget *desktop_radio_button;
+static GtkWidget *console_radio_button;
 static GtkWidget *personnel_radio_button;
 static GtkWidget *orders_radio_button;
 static GtkWidget *warehouse_radio_button;
@@ -18,7 +20,12 @@ static GtkWidget *grid;  // Объявляем grid как глобальную 
 GtkWidget *entry_username;
 GtkWidget *entry_password;
 GtkWidget *auth_button;
+
 // Общие функции
+static void start_window(GtkApplication *app, gpointer subsystem_data);
+void choose_interface(gpointer version_data);
+void proccess(char* user_name, char* password);
+
 static void activate(GtkApplication *app, gpointer user_data);
 int check_data(char *user_name, char *password);
 static void on_auth_button_clicked(GtkWidget *widget, gpointer data);
@@ -28,6 +35,7 @@ int count_id(char *table);
 int find_minimum_free_id(int *id_array, int count, int min_id);
 void the_end(void);
 void print_error();
+
 // Функции для обработки работы с персоналом
 static void choose_action_window_staff(GtkApplication *app, gpointer user_data);
 static void on_action_staff_clicked(GtkWidget *widget, gpointer window, gpointer user_data);
@@ -42,6 +50,7 @@ static void on_delete_staff_clicked(GtkWidget *widget, gpointer user_data);
 static void delete_staff(GtkApplication *app, gpointer user_data);
 void db_connect_staff();
 void show_staff();
+
 // Функции для обработки работы с заказами
 static void choose_action_window_orders(GtkApplication *app, gpointer user_data);
 static void on_action_orders_clicked(GtkWidget *widget, gpointer window, gpointer user_data);
@@ -78,6 +87,14 @@ typedef struct {
     int employee;
     GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
 } AppData;
+
+typedef struct {
+    GtkApplication *app;
+    GtkWidget *window;
+    GtkWidget *main_window;
+    GtkWidget *version;
+    GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
+} AppVersion;
 
 typedef struct {
     GtkApplication *app;
@@ -152,19 +169,18 @@ typedef struct {
 } MaterialDelete;
 
 int main(int argc, char **argv) {
-    GtkApplication *app;
+    
+    GtkApplication *app_start;
     int status;
 
-    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
-    status = g_application_run(G_APPLICATION(app), argc, argv);
-    g_object_unref(app);
-
-    return status;
+    app_start = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect(app_start, "activate", G_CALLBACK(start_window), NULL);
+    status = g_application_run(G_APPLICATION(app_start), argc, argv);
+    g_object_unref(app_start);
 
     // db_connect_staff();
     // show_staff();
-
+    
     // db_connect_orders();
     // show_order();
 
@@ -172,6 +188,33 @@ int main(int argc, char **argv) {
     // show_material();
 
     return 0;
+}
+
+void choose_interface(gpointer version_data) {
+
+    AppVersion *data = (AppVersion*)version_data;
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(desktop_radio_button))) {
+        g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
+        GtkApplication *app;
+        int status;
+
+        app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+        g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+        status = g_application_run(G_APPLICATION(app), 0, NULL);
+        g_object_unref(app);
+
+    } else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(console_radio_button))) {
+        char user_name[MAX_NAME_LENGTH];
+        char password[MAX_PASSWORD_LENGTH];
+        printf("Имя пользователя:\n");
+        scanf("%s", user_name);
+        printf("Пароль:\n");
+        scanf("%s", password);
+        proccess(user_name, password);
+
+    }
+    
 }
 
 // Обработчик события нажатия кнопки "Войти"
@@ -694,6 +737,39 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
     gtk_widget_show_all(window);
 }
+
+static void start_window(GtkApplication *app, gpointer subsystem_data) {
+    GtkWidget *window;
+    GtkWidget *grid;
+    GtkWidget *label;
+    GtkWidget *button_next;
+    GSList *group = NULL;  // Создаем группу для радиокнопок
+
+    window = gtk_application_window_new(app);
+    gtk_window_set_title(GTK_WINDOW(window), "Welcome to AsuPpg!");
+    gtk_window_set_default_size(GTK_WINDOW(window), 300, 200);  
+
+    grid = gtk_grid_new();
+    gtk_container_add(GTK_CONTAINER(window), grid);
+
+    label = gtk_label_new("В каком виде работать с приложением?");
+    gtk_grid_attach(GTK_GRID(grid), label, 0, 0, 1, 1);
+
+    // Добавляем радиокнопки для вариантов ответа, используя GSList* для группы
+    desktop_radio_button = gtk_radio_button_new_with_label(group, "Desktop");
+    group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(desktop_radio_button));  // Обновляем группу
+    gtk_grid_attach(GTK_GRID(grid), desktop_radio_button, 0, 1, 1, 1);
+
+    console_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(desktop_radio_button), "Console");
+    gtk_grid_attach(GTK_GRID(grid), console_radio_button, 0, 2, 1, 1);
+
+    button_next = gtk_button_new_with_label("Продолжить");
+    g_signal_connect(button_next, "clicked", G_CALLBACK(choose_interface), window);
+    gtk_grid_attach(GTK_GRID(grid), button_next, 0, 4, 1, 1);  // Сохраняем координаты как 0, 4, 1, 1
+
+    gtk_widget_show_all(window);
+}
+
 
 static void choose_subsystem_window(GtkApplication *app, gpointer subsystem_data) {
     GtkWidget *window;
