@@ -31,3 +31,6 @@ void add_to_file(char* filename, char* report) {
     free(report);
 }
 
+void print_error() {
+    printf("Error\n");
+}

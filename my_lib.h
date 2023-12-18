@@ -36,7 +36,7 @@ typedef struct {
 
 // Структура Staff
 typedef struct {
-    // int id;
+    int id;
     char name[100];
     int passport;
     int snils;

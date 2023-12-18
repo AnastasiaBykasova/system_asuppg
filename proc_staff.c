@@ -106,13 +106,38 @@ char* report_staff_headquarters(StaffHeadquarters* staff_headquarters, int i) {
 int calculate_salary( const char* position) {
     int salary = 0;
     if (strcmp(position, "Менеджер") == 0) {
-        salary = 60000;
+        salary = 90000;
     } else if (strcmp(position, "Инженер") == 0) {
-        salary = 80000;
+        salary = 110000;
     } else if (strcmp(position, "Аналитик") == 0) {
+        salary = 90000;
+    } 
+    else if (strcmp(position, "Бухгалтер") == 0) {
         salary = 70000;
-    } else if (strcmp(position, "Бухгалтер") == 0) {
-        salary = 65000;
+    }
+    else if (strcmp(position, "Грузчик") == 0) {
+        salary = 50000;
+    }
+    else if (strcmp(position, "Комплектовщик") == 0) {
+        salary = 60000;
+    }
+    else if (strcmp(position, "Логист") == 0) {
+        salary = 80000;
+    }
+    else if (strcmp(position, "Мастер") == 0) {
+        salary = 100000;
+    }
+    else if (strcmp(position, "Механик") == 0) {
+        salary = 110000;
+    }
+    else if (strcmp(position, "Оператор") == 0) {
+        salary = 70000;
+    }
+    else if (strcmp(position, "Слесарь") == 0) {
+        salary = 80000;
+    }
+    else if (strcmp(position, "Юрист") == 0) {
+        salary = 100000;
     }
     return salary;
 }
@@ -135,12 +160,15 @@ void db_connect() {
         sqlite3_close(db);
         // return 1;
     }
+    // char *sql = "DROP TABLE Staff;";
+    
 
-    char *sql = "CREATE TABLE IF NOT EXISTS Staff(Name TEXT, Passport INT, SNILS INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN INT);"
-                "INSERT INTO Staff VALUES('Monika', 1267890, 111333, 'Инженер', 60000, 'Работает', '22.05.23', '8999567', 117889);";
-                // "INSERT INTO Users VALUES(2, 'Bob', 30);"
-                // "INSERT INTO Users VALUES(3, 'Charlie', 22);";
 
+    // char *sql = "CREATE TABLE IF NOT EXISTS Staff(id INT, Name TEXT, Passport INT, SNILS INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN INT);"
+    //             "INSERT INTO Staff VALUES(3, 'Арсений', 578537, 98548754, 'Мастер', 100000, 'Работает', '14.10.23', '8578544', 1578487547);";
+    
+    char *sql = "DELETE FROM Staff WHERE id>1;";
+    
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
@@ -185,7 +213,8 @@ void show_staff() {
         printf("%s|", sqlite3_column_text(res, 5));
         printf("%s|", sqlite3_column_text(res, 6));
         printf("%s|", sqlite3_column_text(res, 7));
-        printf("%s\n", sqlite3_column_text(res, 8));
+        printf("%s|", sqlite3_column_text(res, 8));
+        printf("%s\n", sqlite3_column_text(res, 9));
 
         step = sqlite3_step(res);
     }
