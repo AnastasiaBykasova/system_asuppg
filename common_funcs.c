@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "my_lib.h"
 // void the_end(void);
 
-
-void the_end(void) {   
-   puts("Работа завершена.");
-}
+void the_end(void) { puts("Работа завершена."); }
 
 void print_file(char* filename) {
     printf("Содержимое файла %s:\n", filename);
@@ -23,7 +21,7 @@ void print_file(char* filename) {
 }
 
 void add_to_file(char* filename, char* report) {
-    FILE *file = fopen(filename, "a+");
+    FILE* file = fopen(filename, "a+");
     if (file != NULL) {
         fputs(report, file);
         fclose(file);
@@ -31,6 +29,4 @@ void add_to_file(char* filename, char* report) {
     free(report);
 }
 
-void print_error() {
-    printf("Error\n");
-}
+void print_error() { printf("Error\n"); }

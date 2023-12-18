@@ -30,7 +30,6 @@ typedef struct {
     char date[12];
 } Product;
 
-
 // Структура Order
 typedef struct {
     Product product[100];
@@ -52,9 +51,8 @@ typedef struct {
     int inn;
 } Staff;
 
-// Структура 
+// Структура
 typedef struct {
     Staff* staff[300];
     int quantity;
 } StaffHeadquarters;
-

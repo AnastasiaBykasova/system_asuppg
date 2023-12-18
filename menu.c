@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "my_lib.h"
 void the_end(void);
-
 
 int switch_system_admin() {
     // int for_exit = 0;
@@ -14,7 +14,7 @@ int switch_system_admin() {
     scanf("%d", &choice);
     int res = 0;
 
-    switch(choice) {
+    switch (choice) {
         case 1:
             res = 1;
             break;
@@ -33,29 +33,31 @@ int switch_system_admin() {
 
 int switch_action() {
     int choice;
-    printf("\nВыберите действие:\n1. Показать данные\n2. Добавить данные\n3. Завершить\n");
+    printf(
+        "\nВыберите действие:\n1. Показать данные\n2. Добавить данные\n3. "
+        "Завершить\n");
     printf("Введите номер действия: ");
     scanf("%d", &choice);
     int res;
     // int for_exit = 0;
     // for_exit = atexit(the_end);
     // if (!for_exit) {
-        switch(choice) {
-            case 1:
-                res = 1;
-                break;
-            case 2:
-                res = 2;
-                break;
-            case 3:
-                res = 3;
-                break;
-            default:
-                res = 0;
-                // break;
-                // exit(EXIT_SUCCESS);
-        }
-        
+    switch (choice) {
+        case 1:
+            res = 1;
+            break;
+        case 2:
+            res = 2;
+            break;
+        case 3:
+            res = 3;
+            break;
+        default:
+            res = 0;
+            // break;
+            // exit(EXIT_SUCCESS);
+    }
+
     // }
 
     return res;
