@@ -852,37 +852,51 @@ static void on_action_materials_clicked(GtkWidget *widget, gpointer window, gpoi
 // Функция для создания графического интерфейса и добавления элементов
 static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window;
-    GtkWidget *grid;
-    GtkWidget *subsystem_label;  
+    // GtkWidget *grid;
+    GtkWidget *subsystem_label;  // Добавляем для отображения подсистемы
     GtkWidget *button;
 
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Welcome to AsuPpg!");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 800);
-    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);  // Центрируем окно
+    gtk_window_move(GTK_WINDOW(window), 100,
+                    100);  // Новые координаты окна (x, y)
+    // gtk_window_fullscreen(GTK_WINDOW(window));
 
-    grid = gtk_grid_new();  // создаем сетку
+    grid = gtk_grid_new();
     gtk_container_add(GTK_CONTAINER(window), grid);
 
     // Создаем виджеты для аутентификации
     GtkWidget *entry_username = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_username), "Имя пользователя");
-    gtk_widget_set_size_request(entry_username, 300, 50);  // Устанавливаем размеры
-    gtk_grid_attach(GTK_GRID(grid), entry_username, 0, 0, 1, 1);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_username), "Username");
+    gtk_grid_attach(GTK_GRID(grid), entry_username, 400, 0, 1, 1);
 
     GtkWidget *entry_password = gtk_entry_new();
     gtk_entry_set_visibility(GTK_ENTRY(entry_password), FALSE);
-    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_password), "Пароль");
-    gtk_widget_set_size_request(entry_password, 300, 50);  // Устанавливаем размеры
-    gtk_grid_attach(GTK_GRID(grid), entry_password, 0, 1, 1, 1);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_password), "Password");
+    gtk_grid_attach(GTK_GRID(grid), entry_password, 400, 1, 1, 1);
 
-    auth_button = gtk_button_new_with_label("Войти");
-    gtk_widget_set_size_request(auth_button, 300, 50);  // Устанавливаем размеры
+    GtkWidget *auth_button = gtk_button_new_with_label("Войти");
+    gtk_grid_attach(GTK_GRID(grid), auth_button, 400, 2, 1, 1);
+
+    // Создаем виджеты для выбора подсистемы
+    // subsystem_label = gtk_label_new("Выберите один из вариантов:");
+
+    AppData *data = g_slice_new(AppData);
+    data->app = app;
+    data->entry_username = entry_username;
+    data->entry_password = entry_password;
+    data->grid = grid;  // Сохраняем grid в структуре AppData
+    data->main_window = window;  // Сохраняем указатель на главное окно в структуре AppData
+
+    // Запоминаем grid
+    grid = grid;
+
+    button = gtk_button_new_with_label("Войти");
+    g_signal_connect(auth_button, "clicked", G_CALLBACK(on_auth_button_clicked), data);
     gtk_grid_attach(GTK_GRID(grid), auth_button, 0, 2, 1, 1);
 
-    // Включаем отображение всех виджетов
     gtk_widget_show_all(window);
-
 }
 
 static void start_window(GtkApplication *app, gpointer subsystem_data) {
