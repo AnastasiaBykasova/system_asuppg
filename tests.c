@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "my_lib.h"
+#include "lib_main.h"
+#include "lib_material.h"
+#include "lib_order.h"
+#include "lib_staff.h"
 
 int calculate_salary(const char *position);
 int calculate_salary_test(const char *position);
