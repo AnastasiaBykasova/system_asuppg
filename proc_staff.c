@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "my_lib.h"
+#include "lib_main.h"
+#include "lib_staff.h"
 
 void the_end(void);
 Staff create_staff();
@@ -161,18 +162,22 @@ void db_connect_staff() {
     // char *sql = "DROP TABLE Staff;";
 
     char* sql =
-        "CREATE TABLE IF NOT EXISTS Staff(id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Passport INT, SNILS "
+        "CREATE TABLE IF NOT EXISTS Staff(id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Passport INT, "
+        "SNILS "
         "INT, Position TEXT, Salary INT, Status TEXT, Date TEXT, Phone INT, INN "
         "INT);"
-        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES('Арсений2', 578537, 854854, 'Менеджер', "
+        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) "
+        "VALUES('Арсений2', 578537, 854854, 'Менеджер', "
         "90000, 'Работает', '14.10.23', 8578544, 1578487547);"
-        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES('Арсений3', 123456, 548754, 'Инженер', "
+        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) "
+        "VALUES('Арсений3', 123456, 548754, 'Инженер', "
         "110000, 'Работает', '14.10.23', 8578544, 1578487547);"
-        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES('Арсений4', 98765, 948754, 'Аналитик', "
+        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) "
+        "VALUES('Арсений4', 98765, 948754, 'Аналитик', "
         "90000, 'Работает', '14.10.23', 8578544, 1578487547);"
-        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES('Арсений5', 443784, 985484, 'Юрист', "
+        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) "
+        "VALUES('Арсений5', 443784, 985484, 'Юрист', "
         "100000, 'Работает', '14.10.23', 8578544, 1578487547);";
-
 
     // char *sql = "DELETE FROM Staff WHERE id>1;";
     // char *sql = "SELECT * FROM Staff;";

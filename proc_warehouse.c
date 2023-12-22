@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "my_lib.h"
+#include "lib_main.h"
+#include "lib_material.h"
 
 void the_end(void);
 

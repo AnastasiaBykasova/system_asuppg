@@ -5,7 +5,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "my_lib.h"
+#include "lib_main.h"
+#include "lib_material.h"
+#include "lib_order.h"
+#include "lib_staff.h"
 
 static GtkWidget *desktop_radio_button;
 static GtkWidget *console_radio_button;
@@ -183,7 +186,6 @@ int main(int argc, char **argv) {
     // printf("%d\n", calculate_material_quantity(atoi(amount_to_delete), amount_value));
     // printf("%d\n", calculate_material_quantity(640, 40));
 
-
     // db_connect_staff();
     // show_staff();
 
@@ -329,7 +331,8 @@ static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data) {
         char temp[1000];
         time_t mytime = time(NULL);
         struct tm *now = localtime(&mytime);
-        snprintf(temp, 1000, "Добавлен сотрудник с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+        snprintf(temp, 1000, "Добавлен сотрудник с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday,
+                 now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
 
         // Открываем файл для записи
         FILE *file = fopen("report/staff.txt", "a");
@@ -340,7 +343,6 @@ static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data) {
         } else {
             print_error();
         }
-
 
         // Вызываем функцию для добавления сотрудника в базу данных
         add_staff_to_table(id, name, passport, snils, position, salary, status, emp_date, phone_num, inn);
@@ -385,7 +387,8 @@ static void on_delete_staff_clicked(GtkWidget *widget, gpointer user_data) {
     char temp[1000];
     time_t mytime = time(NULL);
     struct tm *now = localtime(&mytime);
-    snprintf(temp, 1000, "Удален сотрудник с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+    snprintf(temp, 1000, "Удален сотрудник с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday,
+             now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Открываем файл для записи
     FILE *file = fopen("report/staff.txt", "a");
@@ -425,11 +428,11 @@ static void on_add_orders_clicked(GtkWidget *widget, gpointer order_data) {
     // строкой нулевой длины
     if (customer && *customer != '\0' && name && *name != '\0' && value_text && *value_text != '\0' &&
         amount_text && *amount_text != '\0' && pay_type && *pay_type != '\0') {
-    
         char order_time[1000];
         time_t mytime = time(NULL);
         struct tm *order_now = localtime(&mytime);
-        snprintf(order_time, 1000, "%d.%d.%d", order_now->tm_mday, order_now->tm_mon + 1, order_now->tm_year + 1900);
+        snprintf(order_time, 1000, "%d.%d.%d", order_now->tm_mday, order_now->tm_mon + 1,
+                 order_now->tm_year + 1900);
         const char *date = order_time;
 
         // Преобразуем текст в целые числа
@@ -439,11 +442,11 @@ static void on_add_orders_clicked(GtkWidget *widget, gpointer order_data) {
         char table[8] = "Orders";
         int id = count_id(table);
 
-
         char temp[1000];
         // time_t mytime = time(NULL);
         struct tm *now = localtime(&mytime);
-        snprintf(temp, 1000, "Добавлен заказ с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+        snprintf(temp, 1000, "Добавлен заказ с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday,
+                 now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
 
         // Открываем файл для записи
         FILE *file = fopen("report/orders.txt", "a");
@@ -454,7 +457,7 @@ static void on_add_orders_clicked(GtkWidget *widget, gpointer order_data) {
         } else {
             print_error();
         }
-        
+
         // Вызываем функцию для добавления сотрудника в базу данных
         add_order_to_table(id, customer, name, value, amount, sum, pay_type, date);
 
@@ -499,7 +502,8 @@ static void on_delete_order_clicked(GtkWidget *widget, gpointer order_data) {
     char temp[1000];
     time_t mytime = time(NULL);
     struct tm *now = localtime(&mytime);
-    snprintf(temp, 1000, "Удален заказ с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+    snprintf(temp, 1000, "Удален заказ с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday,
+             now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Открываем файл для записи
     FILE *file = fopen("report/orders.txt", "a");
@@ -548,7 +552,8 @@ static void on_add_material_clicked(GtkWidget *widget, gpointer material_data) {
         char temp[1000];
         time_t mytime = time(NULL);
         struct tm *now = localtime(&mytime);
-        snprintf(temp, 1000, "Добавлен материал с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+        snprintf(temp, 1000, "Добавлен материал с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday,
+                 now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
 
         // Открываем файл для записи
         FILE *file = fopen("report/staff.txt", "a");
@@ -594,7 +599,7 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
     }
 
     char *sql = sqlite3_mprintf("SELECT Quantity FROM Materials WHERE id='%s' LIMIT 1;", id_to_delete);
-    sqlite3_stmt* res;
+    sqlite3_stmt *res;
 
     // Подготовка запроса
     rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
@@ -613,20 +618,18 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
             int new_amount = calculate_material_quantity(atoi(amount_to_delete), amount_value);
             if (new_amount > 0) {
                 // Подготовка строки для обновления
-                update_sql = sqlite3_mprintf("UPDATE Materials SET Quantity=%d WHERE id='%s';", new_amount, id_to_delete);
+                update_sql = sqlite3_mprintf("UPDATE Materials SET Quantity=%d WHERE id='%s';", new_amount,
+                                             id_to_delete);
                 g_print("1 %d\n", new_amount);
-            }
-            else if (new_amount == 0) {
-                update_sql = sqlite3_mprintf("DELETE FROM Materials WHERE id='%s';", id_to_delete); 
+            } else if (new_amount == 0) {
+                update_sql = sqlite3_mprintf("DELETE FROM Materials WHERE id='%s';", id_to_delete);
                 g_print("2 %d\n", new_amount);
 
-            }
-            else {
+            } else {
                 update_sql = sqlite3_mprintf("SELECT id FROM Materials WHERE id='%s';", id_to_delete);
                 g_print("3 %d\n", new_amount);
-
             }
-            
+
             // Выполнение запроса UPDATE
             rc = sqlite3_exec(db, update_sql, 0, 0, &err_msg);
             if (rc != SQLITE_OK) {
@@ -635,7 +638,7 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
             } else {
                 fprintf(stdout, "Update successful\n");
             }
-            
+
             // Освобождение строкового запроса для UPDATE
             sqlite3_free(update_sql);
         } else {
@@ -651,11 +654,11 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
     // Закрытие базы данных
     sqlite3_close(db);
 
-
     char temp[1000];
     time_t mytime = time(NULL);
     struct tm *now = localtime(&mytime);
-    snprintf(temp, 1000, "Удален материал с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+    snprintf(temp, 1000, "Удален материал с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday,
+             now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
 
     // Открываем файл для записи
     FILE *file = fopen("report/material.txt", "a");
@@ -681,11 +684,7 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
     g_slice_free(MaterialDelete, data);  // Освобождаем память
 }
 
-int calculate_material_quantity(int amount_1, int amount_2) {
-    return amount_1 - amount_2;
-}
-
-
+int calculate_material_quantity(int amount_1, int amount_2) { return amount_1 - amount_2; }
 
 int count_id(char *table) {
     sqlite3 *db;
@@ -931,7 +930,6 @@ static void start_window(GtkApplication *app, gpointer subsystem_data) {
 
     gtk_widget_show_all(window);
     // gtk_main_quit(); // Выходим из основного цикла GTK
-
 }
 
 static void choose_subsystem_window(GtkApplication *app, gpointer subsystem_data) {
@@ -1548,7 +1546,9 @@ void add_staff_to_table(int id, const char *name, int passport, int snils, const
         return;
     }
 
-    const char *sql = "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const char *sql =
+        "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES(?, ?, "
+        "?, ?, ?, ?, ?, ?, ?)";
     sqlite3_stmt *res;
     sqlite3_prepare_v2(db, sql, -1, &res, 0);
     // sqlite3_bind_int(res, 1, new_staff.id);

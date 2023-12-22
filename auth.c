@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "my_lib.h"
+#include "lib_main.h"
+#include "lib_material.h"
+#include "lib_order.h"
+#include "lib_staff.h"
 
 int check_data(char* user_name, char* password) {
     int res = 0;
