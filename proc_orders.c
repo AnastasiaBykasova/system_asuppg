@@ -122,7 +122,7 @@ void db_connect_orders() {
         sqlite3_close(db);
         // return 1;
     }
-    // char *sql = "DROP TABLE Staff;";
+    // char *sql = "DROP TABLE Orders;";
 
     char* sql =
         "CREATE TABLE IF NOT EXISTS Orders(id INT, Customer TEXT, Name TEXT, "
@@ -147,7 +147,8 @@ void db_connect_orders() {
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
-    } else {
+    } 
+    else {
         fprintf(stdout, "success\n");
         // printf("Hii");
     }

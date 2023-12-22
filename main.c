@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "my_lib.h"
 
@@ -24,7 +25,7 @@ GtkWidget *auth_button;
 // Общие функции
 static void start_window(GtkApplication *app, gpointer subsystem_data);
 void choose_interface(gpointer version_data);
-void proccess(char* user_name, char* password);
+void proccess(char *user_name, char *password);
 
 static void activate(GtkApplication *app, gpointer user_data);
 int check_data(char *user_name, char *password);
@@ -61,10 +62,11 @@ void add_order_to_table(int id, const char *customer, const char *name, int valu
 int calculate_sum(int value, int amount);
 static void show_orders_in_window(GtkApplication *app, GtkWidget *widget, gpointer order_data);
 void select_from_orders_table(GtkListStore *store);
-static void on_delete_orders_clicked(GtkWidget *widget, gpointer order_data);
+static void on_delete_order_clicked(GtkWidget *widget, gpointer order_data);
 static void delete_order(GtkApplication *app, gpointer order_data);
 void db_connect_orders();
 void show_order();
+
 // Функции для обработки работы со складом
 static void choose_action_window_materials(GtkApplication *app, gpointer user_data);
 static void on_action_materials_clicked(GtkWidget *widget, gpointer window, gpointer user_data);
@@ -74,6 +76,7 @@ void add_material_to_table(int id, const char *name, const char *param, int quan
 static void show_materials_in_window(GtkApplication *app, GtkWidget *widget, gpointer material_data);
 void select_from_materials_table(GtkListStore *store);
 static void on_delete_material_clicked(GtkWidget *widget, gpointer user_data);
+int calculate_material_quantity(int amount_1, int amount_2);
 static void delete_material(GtkApplication *app, gpointer material_data);
 void db_connect_materials();
 void show_material();
@@ -169,7 +172,6 @@ typedef struct {
 } MaterialDelete;
 
 int main(int argc, char **argv) {
-    
     GtkApplication *app_start;
     int status;
 
@@ -178,9 +180,13 @@ int main(int argc, char **argv) {
     status = g_application_run(G_APPLICATION(app_start), argc, argv);
     g_object_unref(app_start);
 
+    // printf("%d\n", calculate_material_quantity(atoi(amount_to_delete), amount_value));
+    // printf("%d\n", calculate_material_quantity(640, 40));
+
+
     // db_connect_staff();
     // show_staff();
-    
+
     // db_connect_orders();
     // show_order();
 
@@ -191,8 +197,7 @@ int main(int argc, char **argv) {
 }
 
 void choose_interface(gpointer version_data) {
-
-    AppVersion *data = (AppVersion*)version_data;
+    AppVersion *data = (AppVersion *)version_data;
 
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(desktop_radio_button))) {
         g_application_quit(G_APPLICATION(data->app));  // Закрываем приложение
@@ -212,9 +217,7 @@ void choose_interface(gpointer version_data) {
         printf("Пароль:\n");
         scanf("%s", password);
         proccess(user_name, password);
-
     }
-    
 }
 
 // Обработчик события нажатия кнопки "Войти"
@@ -323,6 +326,22 @@ static void on_add_staff_clicked(GtkWidget *widget, gpointer user_data) {
         char table[8] = "Staff";
         int id = count_id(table);
 
+        char temp[1000];
+        time_t mytime = time(NULL);
+        struct tm *now = localtime(&mytime);
+        snprintf(temp, 1000, "Добавлен сотрудник с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+
+        // Открываем файл для записи
+        FILE *file = fopen("report/staff.txt", "a");
+        if (file != NULL) {
+            // Записываем строку в файл
+            fputs(temp, file);
+            fclose(file);
+        } else {
+            print_error();
+        }
+
+
         // Вызываем функцию для добавления сотрудника в базу данных
         add_staff_to_table(id, name, passport, snils, position, salary, status, emp_date, phone_num, inn);
     } else {
@@ -363,6 +382,21 @@ static void on_delete_staff_clicked(GtkWidget *widget, gpointer user_data) {
         sqlite3_free(err_msg);
     }
 
+    char temp[1000];
+    time_t mytime = time(NULL);
+    struct tm *now = localtime(&mytime);
+    snprintf(temp, 1000, "Удален сотрудник с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+
+    // Открываем файл для записи
+    FILE *file = fopen("report/staff.txt", "a");
+    if (file != NULL) {
+        // Записываем строку в файл
+        fputs(temp, file);
+        fclose(file);
+    } else {
+        print_error();
+    }
+
     sqlite3_free(sql);
     sqlite3_close(db);
 
@@ -385,12 +419,19 @@ static void on_add_orders_clicked(GtkWidget *widget, gpointer order_data) {
     const char *value_text = gtk_entry_get_text(GTK_ENTRY(data->value));
     const char *amount_text = gtk_entry_get_text(GTK_ENTRY(data->amount));
     const char *pay_type = gtk_entry_get_text(GTK_ENTRY(data->pay_type));
-    const char *date = gtk_entry_get_text(GTK_ENTRY(data->date));
+    // const char *date = gtk_entry_get_text(GTK_ENTRY(data->date));
 
     // Проверяем, что ни один из полученных указателей не является нулевым или
     // строкой нулевой длины
     if (customer && *customer != '\0' && name && *name != '\0' && value_text && *value_text != '\0' &&
-        amount_text && *amount_text != '\0' && pay_type && *pay_type != '\0' && date && *date != '\0') {
+        amount_text && *amount_text != '\0' && pay_type && *pay_type != '\0') {
+    
+        char order_time[1000];
+        time_t mytime = time(NULL);
+        struct tm *order_now = localtime(&mytime);
+        snprintf(order_time, 1000, "%d.%d.%d", order_now->tm_mday, order_now->tm_mon + 1, order_now->tm_year + 1900);
+        const char *date = order_time;
+
         // Преобразуем текст в целые числа
         int value = atoi(value_text);
         int amount = atoi(amount_text);
@@ -398,8 +439,25 @@ static void on_add_orders_clicked(GtkWidget *widget, gpointer order_data) {
         char table[8] = "Orders";
         int id = count_id(table);
 
+
+        char temp[1000];
+        // time_t mytime = time(NULL);
+        struct tm *now = localtime(&mytime);
+        snprintf(temp, 1000, "Добавлен заказ с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+
+        // Открываем файл для записи
+        FILE *file = fopen("report/orders.txt", "a");
+        if (file != NULL) {
+            // Записываем строку в файл
+            fputs(temp, file);
+            fclose(file);
+        } else {
+            print_error();
+        }
+        
         // Вызываем функцию для добавления сотрудника в базу данных
         add_order_to_table(id, customer, name, value, amount, sum, pay_type, date);
+
     } else {
         // Выводим сообщение об ошибке, если какой-либо из полученных указателей
         // некорректен или данные некорректны
@@ -417,7 +475,7 @@ static void on_add_orders_clicked(GtkWidget *widget, gpointer order_data) {
     g_slice_free(OrderAdd, data);  // Освобождаем память
 }
 
-static void on_delete_orders_clicked(GtkWidget *widget, gpointer order_data) {
+static void on_delete_order_clicked(GtkWidget *widget, gpointer order_data) {
     OrderDelete *data = (OrderDelete *)order_data;
     sqlite3 *db;
     char *err_msg = 0;
@@ -436,6 +494,21 @@ static void on_delete_orders_clicked(GtkWidget *widget, gpointer order_data) {
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
+    }
+
+    char temp[1000];
+    time_t mytime = time(NULL);
+    struct tm *now = localtime(&mytime);
+    snprintf(temp, 1000, "Удален заказ с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+
+    // Открываем файл для записи
+    FILE *file = fopen("report/orders.txt", "a");
+    if (file != NULL) {
+        // Записываем строку в файл
+        fputs(temp, file);
+        fclose(file);
+    } else {
+        print_error();
     }
 
     sqlite3_free(sql);
@@ -472,7 +545,22 @@ static void on_add_material_clicked(GtkWidget *widget, gpointer material_data) {
         char table[10] = "Materials";
         int id = count_id(table);
 
-        // Вызываем функцию для добавления сотрудника в базу данных
+        char temp[1000];
+        time_t mytime = time(NULL);
+        struct tm *now = localtime(&mytime);
+        snprintf(temp, 1000, "Добавлен материал с id = %d; Дата: %d.%d.%d %d:%d:%d\n", id, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+
+        // Открываем файл для записи
+        FILE *file = fopen("report/staff.txt", "a");
+        if (file != NULL) {
+            // Записываем строку в файл
+            fputs(temp, file);
+            fclose(file);
+        } else {
+            print_error();
+        }
+
+        // Вызываем функцию для добавления в базу данных
         add_material_to_table(id, name, param, quantity);
     } else {
         // Выводим сообщение об ошибке, если какой-либо из полученных указателей
@@ -505,15 +593,82 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
         sqlite3_close(db);
     }
 
-    char *sql = sqlite3_mprintf("DELETE FROM Materials WHERE id=%s;", id_to_delete);
-    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    char *sql = sqlite3_mprintf("SELECT Quantity FROM Materials WHERE id='%s' LIMIT 1;", id_to_delete);
+    sqlite3_stmt* res;
+
+    // Подготовка запроса
+    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", err_msg);
-        sqlite3_free(err_msg);
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+    } else {
+        // Выполнение запроса
+        rc = sqlite3_step(res);
+        if (rc == SQLITE_ROW) {
+            // Извлечение значения столбца Quantity
+            int amount_value = sqlite3_column_int(res, 0);
+            // g_print("amount: %d\n", amount_value);
+            char *update_sql;
+
+            int new_amount = calculate_material_quantity(atoi(amount_to_delete), amount_value);
+            if (new_amount > 0) {
+                // Подготовка строки для обновления
+                update_sql = sqlite3_mprintf("UPDATE Materials SET Quantity=%d WHERE id='%s';", new_amount, id_to_delete);
+                g_print("1 %d\n", new_amount);
+            }
+            else if (new_amount == 0) {
+                update_sql = sqlite3_mprintf("DELETE FROM Materials WHERE id='%s';", id_to_delete); 
+                g_print("2 %d\n", new_amount);
+
+            }
+            else {
+                update_sql = sqlite3_mprintf("SELECT id FROM Materials WHERE id='%s';", id_to_delete);
+                g_print("3 %d\n", new_amount);
+
+            }
+            
+            // Выполнение запроса UPDATE
+            rc = sqlite3_exec(db, update_sql, 0, 0, &err_msg);
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", err_msg);
+                sqlite3_free(err_msg);
+            } else {
+                fprintf(stdout, "Update successful\n");
+            }
+            
+            // Освобождение строкового запроса для UPDATE
+            sqlite3_free(update_sql);
+        } else {
+            // fprintf(stderr, "No data found\n");
+            print_error();
+        }
+
+        // Освобождение запроса и его результатов
+        sqlite3_finalize(res);
+        sqlite3_free(sql);
     }
 
-    sqlite3_free(sql);
+    // Закрытие базы данных
     sqlite3_close(db);
+
+
+    char temp[1000];
+    time_t mytime = time(NULL);
+    struct tm *now = localtime(&mytime);
+    snprintf(temp, 1000, "Удален материал с id = %s; Дата: %d.%d.%d %d:%d:%d\n", id_to_delete, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+
+    // Открываем файл для записи
+    FILE *file = fopen("report/material.txt", "a");
+    if (file != NULL) {
+        // Записываем строку в файл
+        fputs(temp, file);
+        fclose(file);
+    } else {
+        print_error();
+    }
+
+    // sqlite3_free(sql);
+    // sqlite3_close(db);
 
     GtkApplication *app;
     app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
@@ -525,6 +680,12 @@ static void on_delete_material_clicked(GtkWidget *widget, gpointer material_data
 
     g_slice_free(MaterialDelete, data);  // Освобождаем память
 }
+
+int calculate_material_quantity(int amount_1, int amount_2) {
+    return amount_1 - amount_2;
+}
+
+
 
 int count_id(char *table) {
     sqlite3 *db;
@@ -691,51 +852,37 @@ static void on_action_materials_clicked(GtkWidget *widget, gpointer window, gpoi
 // Функция для создания графического интерфейса и добавления элементов
 static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window;
-    // GtkWidget *grid;
-    GtkWidget *subsystem_label;  // Добавляем для отображения подсистемы
+    GtkWidget *grid;
+    GtkWidget *subsystem_label;  
     GtkWidget *button;
 
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Welcome to AsuPpg!");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 800);
-    gtk_window_move(GTK_WINDOW(window), 100,
-                    100);  // Новые координаты окна (x, y)
-    // gtk_window_fullscreen(GTK_WINDOW(window));
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);  // Центрируем окно
 
-    grid = gtk_grid_new();
+    grid = gtk_grid_new();  // создаем сетку
     gtk_container_add(GTK_CONTAINER(window), grid);
 
     // Создаем виджеты для аутентификации
     GtkWidget *entry_username = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_username), "Username");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_username), "Имя пользователя");
+    gtk_widget_set_size_request(entry_username, 300, 50);  // Устанавливаем размеры
     gtk_grid_attach(GTK_GRID(grid), entry_username, 0, 0, 1, 1);
 
     GtkWidget *entry_password = gtk_entry_new();
     gtk_entry_set_visibility(GTK_ENTRY(entry_password), FALSE);
-    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_password), "Password");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_password), "Пароль");
+    gtk_widget_set_size_request(entry_password, 300, 50);  // Устанавливаем размеры
     gtk_grid_attach(GTK_GRID(grid), entry_password, 0, 1, 1, 1);
 
-    GtkWidget *auth_button = gtk_button_new_with_label("Войти");
+    auth_button = gtk_button_new_with_label("Войти");
+    gtk_widget_set_size_request(auth_button, 300, 50);  // Устанавливаем размеры
     gtk_grid_attach(GTK_GRID(grid), auth_button, 0, 2, 1, 1);
 
-    // Создаем виджеты для выбора подсистемы
-    subsystem_label = gtk_label_new("Выберите один из вариантов:");
-
-    AppData *data = g_slice_new(AppData);
-    data->app = app;
-    data->entry_username = entry_username;
-    data->entry_password = entry_password;
-    data->grid = grid;  // Сохраняем grid в структуре AppData
-    data->main_window = window;  // Сохраняем указатель на главное окно в структуре AppData
-
-    // Запоминаем grid
-    grid = grid;
-
-    button = gtk_button_new_with_label("Войти");
-    g_signal_connect(button, "clicked", G_CALLBACK(on_auth_button_clicked), data);
-    gtk_grid_attach(GTK_GRID(grid), button, 0, 2, 1, 1);
-
+    // Включаем отображение всех виджетов
     gtk_widget_show_all(window);
+
 }
 
 static void start_window(GtkApplication *app, gpointer subsystem_data) {
@@ -747,7 +894,7 @@ static void start_window(GtkApplication *app, gpointer subsystem_data) {
 
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Welcome to AsuPpg!");
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 200);  
+    gtk_window_set_default_size(GTK_WINDOW(window), 400, 200);
 
     grid = gtk_grid_new();
     gtk_container_add(GTK_CONTAINER(window), grid);
@@ -760,7 +907,8 @@ static void start_window(GtkApplication *app, gpointer subsystem_data) {
     group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(desktop_radio_button));  // Обновляем группу
     gtk_grid_attach(GTK_GRID(grid), desktop_radio_button, 0, 1, 1, 1);
 
-    console_radio_button = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(desktop_radio_button), "Console");
+    console_radio_button =
+        gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(desktop_radio_button), "Console");
     gtk_grid_attach(GTK_GRID(grid), console_radio_button, 0, 2, 1, 1);
 
     button_next = gtk_button_new_with_label("Продолжить");
@@ -768,8 +916,9 @@ static void start_window(GtkApplication *app, gpointer subsystem_data) {
     gtk_grid_attach(GTK_GRID(grid), button_next, 0, 4, 1, 1);  // Сохраняем координаты как 0, 4, 1, 1
 
     gtk_widget_show_all(window);
-}
+    // gtk_main_quit(); // Выходим из основного цикла GTK
 
+}
 
 static void choose_subsystem_window(GtkApplication *app, gpointer subsystem_data) {
     GtkWidget *window;
@@ -1182,9 +1331,9 @@ static void add_order(GtkApplication *app, gpointer order_data) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(order_pay), "Тип оплаты");
     gtk_grid_attach(GTK_GRID(grid), order_pay, 0, 5, 1, 1);
 
-    GtkWidget *order_date = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(order_date), "Дата оформления");
-    gtk_grid_attach(GTK_GRID(grid), order_date, 0, 6, 1, 1);
+    // GtkWidget *order_date = gtk_entry_new();
+    // gtk_entry_set_placeholder_text(GTK_ENTRY(order_date), "Дата оформления");
+    // gtk_grid_attach(GTK_GRID(grid), order_date, 0, 6, 1, 1);
 
     OrderAdd *data = g_slice_new(OrderAdd);
     data->app = app;
@@ -1193,7 +1342,7 @@ static void add_order(GtkApplication *app, gpointer order_data) {
     data->value = order_value;
     data->amount = order_amount;
     data->pay_type = order_pay;
-    data->date = order_date;
+    // data->date = order_date;
     data->window = window;  // Добавим окно в структуру, чтобы его можно было освободить
 
     // Запоминаем grid
@@ -1240,7 +1389,7 @@ static void delete_order(GtkApplication *app, gpointer order_data) {
     grid = grid;
 
     button = gtk_button_new_with_label("Удалить");
-    g_signal_connect(button, "clicked", G_CALLBACK(on_delete_orders_clicked), data);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_delete_order_clicked), data);
     gtk_grid_attach(GTK_GRID(grid), button, 0, 2, 1, 1);
 
     gtk_widget_show_all(window);
@@ -1385,19 +1534,19 @@ void add_staff_to_table(int id, const char *name, int passport, int snils, const
         return;
     }
 
-    const char *sql = "INSERT INTO Staff VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const char *sql = "INSERT INTO Staff(Name, Passport, SNILS, Position, Salary, Status, Date, Phone, INN) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
     sqlite3_stmt *res;
     sqlite3_prepare_v2(db, sql, -1, &res, 0);
-    sqlite3_bind_int(res, 1, new_staff.id);
-    sqlite3_bind_text(res, 2, new_staff.name, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(res, 3, new_staff.passport);
-    sqlite3_bind_int(res, 4, new_staff.snils);
-    sqlite3_bind_text(res, 5, new_staff.position, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(res, 6, new_staff.salary);
-    sqlite3_bind_text(res, 7, new_staff.status, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(res, 8, new_staff.emp_date, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(res, 9, new_staff.phone_num);
-    sqlite3_bind_int(res, 10, new_staff.inn);
+    // sqlite3_bind_int(res, 1, new_staff.id);
+    sqlite3_bind_text(res, 1, new_staff.name, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(res, 2, new_staff.passport);
+    sqlite3_bind_int(res, 3, new_staff.snils);
+    sqlite3_bind_text(res, 4, new_staff.position, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(res, 5, new_staff.salary);
+    sqlite3_bind_text(res, 6, new_staff.status, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(res, 7, new_staff.emp_date, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(res, 8, new_staff.phone_num);
+    sqlite3_bind_int(res, 9, new_staff.inn);
 
     rc = sqlite3_step(res);
     if (rc != SQLITE_DONE) {

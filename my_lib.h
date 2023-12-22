@@ -14,7 +14,7 @@ typedef struct {
 
 // Структура Warehouse
 typedef struct {
-    Material* materials[100];
+    Material* materials[1000];
     int quantity;
 } Warehouse;
 
@@ -32,7 +32,7 @@ typedef struct {
 
 // Структура Order
 typedef struct {
-    Product product[100];
+    Product product[10000];
     int quantity;
     char status[20];
 } Order;
@@ -53,6 +53,6 @@ typedef struct {
 
 // Структура
 typedef struct {
-    Staff* staff[300];
+    Staff* staff[1000];
     int quantity;
 } StaffHeadquarters;
