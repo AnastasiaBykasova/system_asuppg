@@ -90,8 +90,7 @@ typedef struct {
     GtkWidget *main_window;
     GtkWidget *entry_username;
     GtkWidget *entry_password;
-    int employee;
-    GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
+    GtkWidget *grid;
 } AppData;
 
 typedef struct {
@@ -99,7 +98,7 @@ typedef struct {
     GtkWidget *window;
     GtkWidget *main_window;
     GtkWidget *version;
-    GtkWidget *grid;  // добавляем указатель на grid в структуру AppData
+    GtkWidget *grid;  // добавляем указатель на grid в структуру AppVersion
 } AppVersion;
 
 typedef struct {
@@ -1753,18 +1752,14 @@ static void delete_material(GtkApplication *app, gpointer material_data) {
 }
 
 void add_material_to_table(int id, const char *name, const char *param, int quantity) {
-    // Создадим экземпляр структуры Staff и заполним его полученными данными
     Material new_material;
     new_material.id = id;
     strncpy(new_material.name, name, 100);
     strncpy(new_material.param, param, 100);
     new_material.quantity = quantity;
 
-    // Реализация добавления в базу данных остается практически такой же, как и
-    // прежде
     sqlite3 *db;
     char *err_msg = 0;
-
     int rc = sqlite3_open("asuppg.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
@@ -1779,14 +1774,12 @@ void add_material_to_table(int id, const char *name, const char *param, int quan
     sqlite3_bind_text(res, 2, new_material.name, -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(res, 2, new_material.param, -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(res, 3, new_material.quantity);
-
     rc = sqlite3_step(res);
     if (rc != SQLITE_DONE) {
         fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
     } else {
         fprintf(stdout, "Материал добавлен успешно\n");
     }
-
     sqlite3_finalize(res);
     sqlite3_close(db);
 }

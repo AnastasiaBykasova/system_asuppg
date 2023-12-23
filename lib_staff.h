@@ -1,3 +1,5 @@
+
+
 // Структура Staff
 typedef struct {
     int id;
@@ -12,7 +14,7 @@ typedef struct {
     int inn;
 } Staff;
 
-// Структура
+// Структура StaffHeadquarters
 typedef struct {
     Staff* staff[1000];
     int quantity;
