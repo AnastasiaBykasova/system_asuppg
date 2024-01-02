@@ -106,23 +106,60 @@ Suite *asuppg_test(void) {
     return suite;
 }
 
+// int main(void) {
+//     Suite *suite = asuppg_test();
+//     SRunner *suite_runner = srunner_create(suite);
+
+//     FILE *test_output = fopen("test_output.xml", "w");
+//     if (test_output == NULL) {
+//         perror("Error opening file");
+//         return 1;
+//     }
+
+//     srunner_set_xml(suite_runner, "test_output.xml");  // Устанавливаем XML вывод
+
+//     srunner_run_all(suite_runner, CK_NORMAL);
+
+//     fclose(test_output);  // Закрываем файл
+
+//     // Теперь вывод можно обработать как обычный вывод
+//     test_output = fopen("test_output.xml", "r");
+//     if (test_output == NULL) {
+//         perror("Error opening file");
+//         return 1;
+//     }
+//     char c;
+//     while ((c = fgetc(test_output)) != EOF) {
+//         printf("%c", c);  // Выводим результаты тестов на экран
+//     }
+//     fclose(test_output);  // Закрываем файл
+
+//     remove("test_output.xml");  // Удаляем временный файл
+
+//     srunner_free(suite_runner);
+
+//     return 0;
+
+//     // Suite *suite = asuppg_test();
+//     // SRunner *suite_runner = srunner_create(suite);
+//     // srunner_run_all(suite_runner, CK_NORMAL);
+
+//     // srunner_free(suite_runner);
+
+//     // return 0;
+// }
+
 int main(void) {
     Suite *suite = asuppg_test();
     SRunner *suite_runner = srunner_create(suite);
-
     FILE *test_output = fopen("test_output.xml", "w");
     if (test_output == NULL) {
         perror("Error opening file");
         return 1;
     }
-
     srunner_set_xml(suite_runner, "test_output.xml");  // Устанавливаем XML вывод
-
     srunner_run_all(suite_runner, CK_NORMAL);
-
     fclose(test_output);  // Закрываем файл
-
-    // Теперь вывод можно обработать как обычный вывод
     test_output = fopen("test_output.xml", "r");
     if (test_output == NULL) {
         perror("Error opening file");
@@ -132,19 +169,8 @@ int main(void) {
     while ((c = fgetc(test_output)) != EOF) {
         printf("%c", c);  // Выводим результаты тестов на экран
     }
-    fclose(test_output);  // Закрываем файл
-
+    fclose(test_output);        // Закрываем файл
     remove("test_output.xml");  // Удаляем временный файл
-
     srunner_free(suite_runner);
-
     return 0;
-
-    // Suite *suite = asuppg_test();
-    // SRunner *suite_runner = srunner_create(suite);
-    // srunner_run_all(suite_runner, CK_NORMAL);
-
-    // srunner_free(suite_runner);
-
-    // return 0;
 }
